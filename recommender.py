@@ -1,6 +1,8 @@
 import streamlit as st
 import pickle
 import requests
+import os
+import ast
 from config import (
     MOVIES_PICKLE_PATH, 
     SIMILARITY_PICKLE_PATH,
@@ -11,15 +13,114 @@ from config import (
     NUM_RECOMMENDATIONS,
     PLACEHOLDER_POSTER
 )
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.stem.porter import PorterStemmer
+import pandas as pd
 
 # ==================== DATA LOADING ====================
 
 @st.cache_resource
 def load_data():
-    """Load movies and similarity matrix from pickle files"""
-    movies = pickle.load(open(MOVIES_PICKLE_PATH, 'rb'))
-    similarity = pickle.load(open(SIMILARITY_PICKLE_PATH, 'rb'))
-    return movies, similarity
+    """Load movies and similarity matrix from pickle files or generate from CSV"""
+    
+    # Check if pickle files exist
+    if os.path.exists(MOVIES_PICKLE_PATH) and os.path.exists(SIMILARITY_PICKLE_PATH):
+        movies = pickle.load(open(MOVIES_PICKLE_PATH, 'rb'))
+        similarity = pickle.load(open(SIMILARITY_PICKLE_PATH, 'rb'))
+        return movies, similarity
+    
+    # If not, generate from CSV files
+    st.info("Generating recommendation model from datasets...")
+    
+    try:
+        # Load CSV data
+        movies = pd.read_csv('tmdb_5000_movies.csv')
+        credits = pd.read_csv('tmdb_5000_credits.csv')
+        
+        # Merge datasets
+        movies = movies.merge(credits, on='title')
+        
+        # Select relevant columns
+        movies = movies[['movie_id', 'title', 'keywords', 'genres', 'overview', 'cast', 'crew']]
+        
+        # Remove nulls
+        movies.dropna(inplace=True)
+        
+        # Convert string representations to lists
+        def convert(obj):
+            L = []
+            for i in ast.literal_eval(obj):
+                L.append(i['name'])
+            return L
+        
+        def convert3(obj):
+            count = 0
+            L = []
+            for i in ast.literal_eval(obj):
+                if count != 3:
+                    L.append(i['name'])
+                    count += 1
+                else:
+                    break
+            return L
+        
+        def fetch_director(obj):
+            L = []
+            for i in ast.literal_eval(obj):
+                if i['job'] == 'Director':
+                    L.append(i['name'])
+                    break
+            return L
+        
+        movies['genres'] = movies['genres'].apply(convert)
+        movies['keywords'] = movies['keywords'].apply(convert)
+        movies['cast'] = movies['cast'].apply(convert3)
+        movies['crew'] = movies['crew'].apply(fetch_director)
+        
+        # Process text
+        movies['overview'] = movies['overview'].apply(lambda x: x.split())
+        
+        movies['genres'] = movies['genres'].apply(lambda x: [i.replace(" ", "") for i in x])
+        movies['keywords'] = movies['keywords'].apply(lambda x: [i.replace(" ", "") for i in x])
+        movies['cast'] = movies['cast'].apply(lambda x: [i.replace(" ", "") for i in x])
+        movies['crew'] = movies['crew'].apply(lambda x: [i.replace(" ", "") for i in x])
+        
+        # Create tags
+        movies['tag'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
+        
+        # Final dataframe
+        new_df = movies[['movie_id', 'title', 'tag', 'genres', 'overview']]
+        new_df['tag'] = new_df['tag'].apply(lambda x: " ".join(x))
+        new_df['tag'] = new_df['tag'].apply(lambda x: x.lower())
+        
+        # Stemming
+        ps = PorterStemmer()
+        def stem(text):
+            y = []
+            for i in text.split():
+                y.append(ps.stem(i))
+            return " ".join(y)
+        
+        new_df['tag'] = new_df['tag'].apply(stem)
+        
+        # Vectorize
+        cv = CountVectorizer(max_features=5000, stop_words='english')
+        vectors = cv.fit_transform(new_df['tag']).toarray()
+        
+        # Calculate similarity
+        similarity = cosine_similarity(vectors)
+        
+        # Save pickle files
+        pickle.dump(new_df, open(MOVIES_PICKLE_PATH, 'wb'))
+        pickle.dump(similarity, open(SIMILARITY_PICKLE_PATH, 'wb'))
+        
+        st.success("Model generated successfully!")
+        return new_df, similarity
+        
+    except FileNotFoundError:
+        st.error("CSV files not found. Please upload tmdb_5000_movies.csv and tmdb_5000_credits.csv")
+        return None, None
 
 # ==================== API CALLS ====================
 
