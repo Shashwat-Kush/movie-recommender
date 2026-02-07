@@ -30,10 +30,25 @@ def load_data():
         similarity = pickle.load(open(SIMILARITY_PICKLE_PATH, 'rb'))
         return movies, similarity
     
-    # If not, generate from CSV files
+    # If not, try to download or generate from CSV files
     st.info("Generating recommendation model from datasets...")
     
     try:
+        # Try to load CSV files
+        if not os.path.exists('tmdb_5000_movies.csv'):
+            st.info("Downloading TMDB datasets...")
+            # Download from a reliable source
+            import urllib.request
+            movies_url = "https://raw.githubusercontent.com/datasets/tmdb-5000/main/tmdb_5000_movies.csv"
+            credits_url = "https://raw.githubusercontent.com/datasets/tmdb-5000/main/tmdb_5000_credits.csv"
+            
+            try:
+                urllib.request.urlretrieve(movies_url, 'tmdb_5000_movies.csv')
+                urllib.request.urlretrieve(credits_url, 'tmdb_5000_credits.csv')
+            except:
+                st.error("Could not download datasets. Please ensure CSV files are in the repository.")
+                return None, None
+        
         # Load CSV data
         movies = pd.read_csv('tmdb_5000_movies.csv')
         credits = pd.read_csv('tmdb_5000_credits.csv')

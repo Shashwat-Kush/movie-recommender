@@ -16,6 +16,16 @@ st.set_page_config(layout=PAGE_LAYOUT, page_title=PAGE_TITLE, page_icon=PAGE_ICO
 
 movies_list, similarity = load_data()
 
+# Check if data loaded successfully
+if movies_list is None or similarity is None:
+    st.error("❌ Error: Could not load data. CSV files are required.")
+    st.info("Please ensure the following files exist in the repository:")
+    st.markdown("""
+    - `tmdb_5000_movies.csv`
+    - `tmdb_5000_credits.csv`
+    """)
+    st.stop()
+
 # ==================== MAIN APP ====================
 
 def main():
