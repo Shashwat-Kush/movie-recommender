@@ -1,0 +1,8 @@
+{
+  "protocol": "leave_one_out",
+  "metrics": {
+    "recall@10": 0.008036507260294744,
+    "ndcg@10": 0.003944310369246736,
+    "num_users_evaluated": 138493
+  }
+}
