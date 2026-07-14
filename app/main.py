@@ -67,11 +67,6 @@ def load_movie_mapping(mapping_path: Path) -> Tuple[Dict[int, int], Dict[int, in
     return id_to_idx, idx_to_id
 
 
-def load_full_movie_mapping(splits_dir: Path) -> Dict[int, int]:
-    corpus = pd.read_parquet(splits_dir / "cold_start_corpus.parquet")
-    return {i: int(corpus.iloc[i]["movieId"]) for i in range(len(corpus))}
-
-
 def load_movie_metadata(movies_parquet_dir: Path, movie_ids: List[int]) -> List[Dict[str, Any]]:
     dataset = ds.dataset(movies_parquet_dir, format="parquet")
     scanner = dataset.scanner(
@@ -108,27 +103,26 @@ def load_query_embedding_model(
         checkpoint = torch.load(checkpoint_path, map_location=device)
         ckpt_config = checkpoint.get("config", {})
         ckpt_n_items = ckpt_config.get("n_items", n_items)
-        
+
+        if ckpt_n_items != n_items:
+            raise RuntimeError(
+                f"Checkpoint has {ckpt_n_items} items but movie_mapping.parquet has {n_items}. "
+                "The mapping changed since training — retrain rather than reshaping the "
+                "embedding table, which would desync it from the HNSW index."
+            )
+
         model = TwoTowerWithMetadata(
             n_users=n_users,
             n_items=ckpt_n_items,
             metadata_dim=metadata_dim,
-            embedding_dim=128,
-            hidden_dim=256,
-            output_dim=128,
-            dropout=0.1,
+            embedding_dim=ckpt_config.get("embedding_dim", 128),
+            hidden_dim=ckpt_config.get("hidden_dim", 256),
+            output_dim=ckpt_config.get("output_dim", 128),
+            dropout=ckpt_config.get("dropout", 0.1),
         )
         state_dict = checkpoint.get("model_state_dict", checkpoint)
         model.load_state_dict(state_dict, strict=True)
-        
-        if n_items != ckpt_n_items:
-            with torch.no_grad():
-                new_item_emb = nn.Embedding(n_items, 128)
-                nn.init.normal_(new_item_emb.weight, std=0.01)
-                new_item_emb.weight[:ckpt_n_items] = model.item_embedding.weight
-                model.item_embedding = new_item_emb
-                model.n_items = n_items
-        
+
         model.to(device)
         model.eval()
         _model_cache["model"] = model
@@ -192,9 +186,6 @@ async def startup():
     _, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
     print(f"Loaded {len(idx_to_movie_id):,} movies (training)")
 
-    full_idx_to_movie_id = load_full_movie_mapping(splits_dir)
-    print(f"Loaded {len(full_idx_to_movie_id):,} movies (full corpus)")
-
     n_users = len(user_mapping)
     n_items = len(idx_to_movie_id)
     metadata_dim = 128
@@ -204,7 +195,6 @@ async def startup():
 
     _model_cache["user_mapping"] = user_mapping
     _model_cache["idx_to_movie_id"] = idx_to_movie_id
-    _model_cache["full_idx_to_movie_id"] = full_idx_to_movie_id
     _model_cache["device"] = device
     _model_cache["splits_dir"] = splits_dir
 
@@ -214,7 +204,7 @@ async def startup():
 @app.post("/recommend", response_model=RecommendResponse)
 async def recommend(request: RecommendRequest):
     user_mapping = _model_cache["user_mapping"]
-    full_idx_to_movie_id = _model_cache["full_idx_to_movie_id"]
+    idx_to_movie_id = _model_cache["idx_to_movie_id"]
     device = _model_cache["device"]
     splits_dir = _model_cache["splits_dir"]
     model = _model_cache["model"]
@@ -231,7 +221,8 @@ async def recommend(request: RecommendRequest):
         ef_search=100,
     )
 
-    candidate_movie_ids = [full_idx_to_movie_id[int(idx)] for idx in indices]
+    # Index positions are movie_map indices (see scripts/build_index.py).
+    candidate_movie_ids = [idx_to_movie_id[int(idx)] for idx in indices]
 
     movies_meta = load_movie_metadata(Path("data/parquet/movies"), candidate_movie_ids)
 

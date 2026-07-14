@@ -178,6 +178,69 @@ def load_corpus(input_path: Path) -> Tuple[List[int], List[str]]:
     return table.column("movieId").to_pylist(), table.column("text").to_pylist()
 
 
+def build_aligned_metadata(
+    movie_map: Dict[int, int],
+    processed_dir: Path = Path("data/processed"),
+) -> np.ndarray:
+    """Load cold-start embeddings reindexed into movie_map order.
+
+    The saved embeddings are ordered by cold_start_movie_ids.npy (every movie in
+    movie.csv), which is NOT the same ordering as movie_map (movies appearing in
+    ratings, sorted by movieId). Training, indexing, and evaluation must all address
+    items by movie_map index, so every consumer of the embeddings goes through here.
+
+    Returns (len(movie_map), dim) float32; rows for movieIds with no metadata are zero.
+    """
+    embeddings_path = processed_dir / "cold_start_embeddings_128.npy"
+    movie_ids_path = processed_dir / "cold_start_movie_ids.npy"
+
+    if not embeddings_path.exists():
+        raise FileNotFoundError(
+            f"{embeddings_path} not found. Run: python scripts/generate_cold_start.py"
+        )
+    if not movie_ids_path.exists():
+        raise FileNotFoundError(
+            f"{movie_ids_path} not found. Rerun scripts/generate_cold_start.py to emit it; "
+            "positional alignment is not a safe fallback."
+        )
+
+    source = np.load(embeddings_path)
+    cold_start_movie_ids = np.load(movie_ids_path)
+
+    if len(cold_start_movie_ids) != source.shape[0]:
+        raise ValueError(
+            f"Embedding/movieId length mismatch: {source.shape[0]} embeddings vs "
+            f"{len(cold_start_movie_ids)} ids"
+        )
+
+    cs_mid_to_idx = {int(mid): i for i, mid in enumerate(cold_start_movie_ids)}
+
+    aligned = np.zeros((len(movie_map), source.shape[1]), dtype=np.float32)
+    missing = []
+    for mid, target_idx in movie_map.items():
+        src_idx = cs_mid_to_idx.get(int(mid))
+        if src_idx is None:
+            missing.append(mid)
+        else:
+            aligned[target_idx] = source[src_idx]
+
+    covered = len(movie_map) - len(missing)
+    print(
+        f"Aligned metadata: {covered:,}/{len(movie_map):,} items have embeddings "
+        f"({len(missing):,} zero-filled)"
+    )
+    if missing:
+        print(f"  First missing movieIds: {missing[:5]}")
+
+    if not aligned.any():
+        raise ValueError(
+            "Aligned metadata is entirely zeros — no movieId in movie_map matched the "
+            "cold-start embeddings. Refusing to train on dead metadata."
+        )
+
+    return aligned
+
+
 if __name__ == "__main__":
     config = load_config()
     movie_ids, corpus = load_cold_start_data(config)

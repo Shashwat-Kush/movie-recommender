@@ -214,14 +214,8 @@ def main():
     _, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
     print(f"  Loaded {len(idx_to_movie_id):,} movies (training)")
 
-    # For HNSW index (built on all 27,278 movies), load full mapping from cold start corpus
-    import pandas as pd
-    corpus = pd.read_parquet(splits_dir / "cold_start_corpus.parquet")
-    full_idx_to_movie_id = {i: int(corpus.iloc[i]["movieId"]) for i in range(len(corpus))}
-    print(f"  Loaded {len(full_idx_to_movie_id):,} movies (full corpus for HNSW)")
-
     n_users = len(user_mapping)
-    n_items_model = 26744  # matches Two-Tower checkpoint item_embedding size
+    n_items_model = len(idx_to_movie_id)
 
     print("Loading Two-Tower model...")
     metadata_dim = 128
@@ -246,7 +240,8 @@ def main():
     )
     print(f"  Retrieved {len(indices)} candidates")
 
-    candidate_movie_ids = [full_idx_to_movie_id[int(idx)] for idx in indices]
+    # Index positions are movie_map indices (see scripts/build_index.py).
+    candidate_movie_ids = [idx_to_movie_id[int(idx)] for idx in indices]
 
     print("Loading movie metadata...")
     movies_meta = load_movie_metadata(Path(args.movies_parquet), candidate_movie_ids)

@@ -6,8 +6,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pyarrow.parquet as pq
 import torch
 import yaml
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Add C++ build to path
 cpp_build = Path(__file__).parent.parent / "cpp" / "build_arm64"
@@ -19,6 +22,7 @@ except ImportError:
     print("Error: C++ engine not built. Run: cd cpp && ./build.sh")
     sys.exit(1)
 
+from src.data.cold_start import build_aligned_metadata
 from src.models.two_tower import TwoTowerWithMetadata
 
 
@@ -59,23 +63,24 @@ def main():
     parser.add_argument("--index-path", type=str, default="cpp/build_arm64/index.bin", help="Output index path")
     parser.add_argument("--data-config", type=str, default="configs/data.yaml", help="Data config path")
     parser.add_argument("--model-config", type=str, default="configs/model.yaml", help="Model config path")
-    parser.add_argument("--metadata-path", type=str, default="data/processed/cold_start_embeddings_128.npy", help="Item metadata embeddings")
+    parser.add_argument("--processed-dir", type=str, default="data/processed", help="Processed data dir")
     parser.add_argument("--retrieval-config", type=str, default="configs/retrieval.yaml", help="Retrieval config path")
     args = parser.parse_args()
-    
+
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
-    
-    # Load metadata to get n_items and metadata_dim
-    metadata_path = Path(args.metadata_path)
-    if not metadata_path.exists():
-        print(f"Error: Metadata not found at {metadata_path}")
-        sys.exit(1)
-    
-    item_metadata_np = np.load(metadata_path)
-    print(f"Loaded metadata: {item_metadata_np.shape}")
+
+    # Index positions are movie_map indices, so the API can map results back through
+    # movie_mapping.parquet. Metadata must be in that same order.
+    processed_dir = Path(args.processed_dir)
+    movie_map_table = pq.read_table(processed_dir / "movie_mapping.parquet")
+    movie_map = dict(zip(
+        movie_map_table.column("movieId").to_pylist(),
+        movie_map_table.column("movie_idx").to_pylist(),
+    ))
+    item_metadata_np = build_aligned_metadata(movie_map, processed_dir)
     metadata_dim = item_metadata_np.shape[1]
-    
+
     # Load retrieval config
     retrieval_config = _cpp.RETRIEVAL_DEFAULT_CONFIG
     if Path(args.retrieval_config).exists():
@@ -112,36 +117,37 @@ def main():
             print(f"Checkpoint n_items: {n_items}")
         else:
             n_items = item_metadata_np.shape[0]
-        
+
+        if n_items != item_metadata_np.shape[0]:
+            raise ValueError(
+                f"Checkpoint was trained on {n_items} items but movie_mapping.parquet has "
+                f"{item_metadata_np.shape[0]}. The mapping changed since training — retrain "
+                "or restore the matching mapping rather than truncating (that silently "
+                "misaligns every index position)."
+            )
+
         print(f"Inferred n_users={n_users}, n_items={n_items}, metadata_dim={metadata_dim}")
-        
-        # Truncate metadata to match checkpoint n_items
-        if item_metadata_np.shape[0] > n_items:
-            print(f"Truncating metadata from {item_metadata_np.shape[0]} to {n_items} items")
-            item_metadata_np = item_metadata_np[:n_items]
-        elif item_metadata_np.shape[0] < n_items:
-            print(f"Padding metadata from {item_metadata_np.shape[0]} to {n_items} items")
-            pad = np.zeros((n_items - item_metadata_np.shape[0], metadata_dim), dtype=np.float32)
-            item_metadata_np = np.vstack([item_metadata_np, pad])
-        
-        # Load full model
+
+        ckpt_config = checkpoint.get("config", {}) if isinstance(checkpoint, dict) else {}
         model = TwoTowerWithMetadata(
             n_users=n_users,
             n_items=n_items,
             metadata_dim=metadata_dim,
-            embedding_dim=128,
-            hidden_dim=256,
-            output_dim=128,
-            dropout=0.1,
+            embedding_dim=ckpt_config.get("embedding_dim", 128),
+            hidden_dim=ckpt_config.get("hidden_dim", 256),
+            output_dim=ckpt_config.get("output_dim", 128),
+            dropout=ckpt_config.get("dropout", 0.1),
         )
         model.load_state_dict(state_dict)
         model.to(device)
         model.eval()
-        
-# Generate item embeddings using cold-start (no item ID)
+
+        # Warm path (item ID + metadata) — must match scripts/evaluate.py, otherwise we
+        # measure one set of embeddings and serve another.
         item_metadata = torch.from_numpy(item_metadata_np).to(device)
+        item_ids = torch.arange(n_items, dtype=torch.long, device=device)
         with torch.no_grad():
-            item_embeddings = model.get_item_embeddings_cold(item_metadata)
+            item_embeddings = model.get_item_embeddings(item_ids, item_metadata)
             item_embeddings_np = item_embeddings.cpu().numpy().astype(np.float32)
     else:
         print("No checkpoint provided, using cold-start embeddings directly...")

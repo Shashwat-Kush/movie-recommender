@@ -17,6 +17,7 @@ import pyarrow.parquet as pq
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Any, Iterable
 
+from src.data.cold_start import build_aligned_metadata
 from src.data.dataset import create_dataloaders
 from src.models.trainer import MFTrainer, load_config, MFDataset
 from src.models.matrix_factorization import MatrixFactorization, ImplicitMF
@@ -67,6 +68,8 @@ def train_mf_explicit(args, data_config, model_config):
     n_items = len(movie_map)
     print(f"Users: {n_users:,}, Items: {n_items:,}")
 
+    save_id_mappings(user_map, movie_map, Path(data_config.get("splits", {}).get("output_dir", "data/processed")))
+
     model = MatrixFactorization(
         n_users=n_users,
         n_items=n_items,
@@ -103,6 +106,8 @@ def train_mf_implicit(args, data_config, model_config):
     n_users = len(user_map)
     n_items = len(movie_map)
     print(f"Users: {n_users:,}, Items: {n_items:,}")
+
+    save_id_mappings(user_map, movie_map, Path(data_config.get("splits", {}).get("output_dir", "data/processed")))
 
     model = ImplicitMF(
         n_users=n_users,
@@ -408,6 +413,7 @@ class TwoTowerTrainer:
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
                 self.save_checkpoint("best.pt")
+                self.save_inference_checkpoint("best_model.pt")
 
             self.save_checkpoint(f"epoch_{epoch}.pt")
 
@@ -430,6 +436,18 @@ class TwoTowerTrainer:
                 "config": self.config,
             },
             path,
+        )
+
+    def save_inference_checkpoint(self, name: str) -> None:
+        """Save weights only — this is the artifact evaluate.py, build_index.py, and the
+        API load. Kept separate from best.pt so serving never pulls in optimizer state.
+        """
+        torch.save(
+            {
+                "model_state_dict": self.model.state_dict(),
+                "config": self.config,
+            },
+            self.checkpoint_dir / name,
         )
 
     def load_checkpoint(self, path: str) -> None:
@@ -462,51 +480,16 @@ def train_two_tower(args, data_config, model_config):
     n_items = len(movie_map)
     print(f"Users: {n_users:,}, Items: {n_items:,}")
 
-    # Load 128-dim projected item embeddings from cold-start pipeline
-    metadata_path = Path(data_config.get("splits", {}).get("output_dir", "data/processed")) / "cold_start_embeddings_128.npy"
-    if not metadata_path.exists():
-        metadata_path = Path("data/processed/cold_start_embeddings_128.npy")
+    processed_dir = Path(data_config.get("splits", {}).get("output_dir", "data/processed"))
+    save_id_mappings(user_map, movie_map, processed_dir)
 
-    print(f"Loading item metadata from {metadata_path}...")
-    item_metadata_np = np.load(metadata_path)
-    print(f"  Loaded metadata shape: {item_metadata_np.shape}")
-
-    # Load corresponding movie IDs for proper alignment
-    movie_ids_path = metadata_path.parent / "cold_start_movie_ids.npy"
-    if not movie_ids_path.exists():
-        movie_ids_path = Path("data/processed/cold_start_movie_ids.npy")
-
-    # Build metadata array aligned to movie_map (target indices)
-    if movie_ids_path.exists():
-        print(f"Loading movie ID alignment from {movie_ids_path}...")
-        cold_start_movie_ids = np.load(movie_ids_path)
-        print(f"  Loaded {len(cold_start_movie_ids)} movie IDs from cold-start embeddings")
-
-        # Build lookup: movieId -> row index in cold_start embeddings
-        cs_mid_to_idx = {int(mid): i for i, mid in enumerate(cold_start_movie_ids)}
-
-        # Allocate final metadata array sized to movie_map (n_items)
-        item_metadata_np = np.zeros((n_items, item_metadata_np.shape[1]), dtype=np.float32)
-        missing_count = 0
-        for mid, target_idx in movie_map.items():
-            if mid in cs_mid_to_idx:
-                item_metadata_np[target_idx] = item_metadata_np[cs_mid_to_idx[mid]]
-            else:
-                missing_count += 1
-
-        if missing_count:
-            print(f"  Warning: {missing_count} movieIds from movie_map not found in cold-start embeddings (filled with zeros)")
-    else:
-        # Fallback: old positional truncation/padding (warn)
-        print(f"  Warning: {movie_ids_path} not found, falling back to positional truncation/padding")
-        if item_metadata_np.shape[0] > n_items:
-            item_metadata_np = item_metadata_np[:n_items]
-        else:
-            pad = np.zeros((n_items - item_metadata_np.shape[0], 128), dtype=np.float32)
-            item_metadata_np = np.vstack([item_metadata_np, pad])
+    item_metadata_np = build_aligned_metadata(movie_map, processed_dir)
 
     item_metadata = torch.from_numpy(item_metadata_np).to(device)
     metadata_dim = item_metadata.shape[1]  # 128
+
+    # Architecture params live under the `two_tower:` block in configs/model.yaml
+    tt_config = model_config.get("two_tower", {})
 
     # Initialize TwoTowerWithMetadata model
     model = TwoTowerWithMetadata(
@@ -514,16 +497,16 @@ def train_two_tower(args, data_config, model_config):
         n_items=n_items,
         metadata_dim=metadata_dim,
         embedding_dim=model_config.get("embedding_dim", 128),
-        hidden_dim=model_config.get("hidden_dim", 256),
-        output_dim=model_config.get("output_dim", 128),
-        dropout=model_config.get("dropout", 0.1),
+        hidden_dim=tt_config.get("hidden_dim", 256),
+        output_dim=tt_config.get("output_dim", 128),
+        dropout=tt_config.get("dropout", 0.1),
     )
 
     checkpoint_dir = model_config.get("checkpoint_dir", "checkpoints/two_tower")
     model_config["checkpoint_dir"] = checkpoint_dir
 
     # Wrap loaders with negative sampling and metadata lookup
-    neg_ratio = model_config.get("neg_sampling_ratio", 4)
+    neg_ratio = tt_config.get("neg_sampling_ratio", 4)
 
     train_dataset = TwoTowerDataset(
         train_loader,
@@ -554,14 +537,17 @@ def train_two_tower(args, data_config, model_config):
         "loss_type": model_config.get("loss_type", "bce"),
         "checkpoint_dir": checkpoint_dir,
         "neg_sampling_ratio": neg_ratio,
+        "lr_scheduler": model_config.get("lr_scheduler", {}),
+        "early_stopping": model_config.get("early_stopping", {}),
+        "log_interval": model_config.get("log_interval", 500),
         # Model architecture params saved in checkpoint for evaluate.py / build_index.py
         "n_users": n_users,
         "n_items": n_items,
         "metadata_dim": metadata_dim,
         "embedding_dim": model_config.get("embedding_dim", 128),
-        "hidden_dim": model_config.get("hidden_dim", 256),
-        "output_dim": model_config.get("output_dim", 128),
-        "dropout": model_config.get("dropout", 0.1),
+        "hidden_dim": tt_config.get("hidden_dim", 256),
+        "output_dim": tt_config.get("output_dim", 128),
+        "dropout": tt_config.get("dropout", 0.1),
     }
 
     trainer = TwoTowerTrainer(model, train_dataset, val_dataset, train_config, device)
@@ -600,19 +586,6 @@ def main():
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Device: {device}")
     print(f"Model: {args.model}")
-
-    # Create dataloaders and get mappings
-    splits_dir = Path(data_config.get("splits", {}).get("output_dir", "data/processed"))
-    
-    train_loader, val_time_loader, val_loo_loader, test_loader, user_map, movie_map = create_dataloaders(
-        data_config,
-        batch_size=model_config.get("batch_size", 2048),
-        shuffle_train=True,
-        device=device,
-    )
-    
-    # Save ID mappings
-    save_id_mappings(user_map, movie_map, splits_dir)
 
     if args.model == "mf":
         train_mf_explicit(args, data_config, model_config)

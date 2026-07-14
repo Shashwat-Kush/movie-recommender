@@ -1,4 +1,5 @@
 """Offline evaluation script for Two-Tower movie recommender."""
+import json
 import sys
 from pathlib import Path
 
@@ -9,6 +10,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from src.data.cold_start import build_aligned_metadata
 from src.models.two_tower import TwoTowerWithMetadata
 
 
@@ -74,43 +76,28 @@ def get_user_embeddings(model: TwoTowerWithMetadata, user_mapping: dict, device:
 def compute_item_embeddings(
     model: TwoTowerWithMetadata,
     item_metadata: np.ndarray,
-    ckpt_n_items: int,
-    full_n_items: int,
     device: torch.device,
     batch_size: int = 4096,
 ) -> np.ndarray:
-    """Compute item embeddings using trained model.
+    """Compute item embeddings via the warm path (item ID + metadata).
 
-    For items in checkpoint (0 to ckpt_n_items-1): use trained item_id embedding + metadata.
-    For remaining items: use cold-start (zero embedding + metadata).
+    item_metadata must be in movie_map index order (see build_aligned_metadata), which
+    makes every row a trained item. Mirrors scripts/build_index.py so evaluation measures
+    the same embeddings the API serves.
     """
-    print(f"  Computing embeddings for {full_n_items} items (trained: {ckpt_n_items}, cold-start: {full_n_items - ckpt_n_items})")
+    n_items = item_metadata.shape[0]
+    print(f"  Computing embeddings for {n_items} items")
 
-    # Get trained item ID embeddings
-    trained_item_emb = model.item_embedding.weight.data.cpu().numpy()  # (ckpt_n_items, 128)
+    all_embeddings = np.zeros((n_items, model.output_dim), dtype=np.float32)
 
-    all_embeddings = np.zeros((full_n_items, model.output_dim), dtype=np.float32)
-
-    # Process trained items
-    for i in range(0, ckpt_n_items, batch_size):
-        end = min(i + batch_size, ckpt_n_items)
+    for i in range(0, n_items, batch_size):
+        end = min(i + batch_size, n_items)
         batch_indices = np.arange(i, end)
         item_ids = torch.tensor(batch_indices, dtype=torch.long, device=device)
         metadata = torch.from_numpy(item_metadata[batch_indices]).to(device)
 
         with torch.no_grad():
             emb = model.get_item_embeddings(item_ids, metadata)
-
-        all_embeddings[batch_indices] = emb.cpu().numpy().astype(np.float32)
-
-    # Process cold-start items
-    for i in range(ckpt_n_items, full_n_items, batch_size):
-        end = min(i + batch_size, full_n_items)
-        batch_indices = np.arange(i, end)
-        metadata = torch.from_numpy(item_metadata[batch_indices]).to(device)
-
-        with torch.no_grad():
-            emb = model.get_item_embeddings_cold(metadata)
 
         all_embeddings[batch_indices] = emb.cpu().numpy().astype(np.float32)
 
@@ -205,14 +192,10 @@ def main():
     print(f"  User embeddings shape: {user_embeddings.shape}")
 
     print("Loading item metadata...")
-    item_metadata = np.load("data/processed/cold_start_embeddings_128.npy").astype(np.float32)
-    print(f"  Item metadata shape: {item_metadata.shape}")
-    full_n_items = len(item_metadata)
+    item_metadata = build_aligned_metadata(item_mapping, splits_dir)
 
     print("Computing item embeddings...")
-    item_embeddings = compute_item_embeddings(
-        model, item_metadata, ckpt_n_items, full_n_items, device
-    )
+    item_embeddings = compute_item_embeddings(model, item_metadata, device)
     print(f"  Item embeddings shape: {item_embeddings.shape}")
 
     print("Loading test data...")
@@ -232,6 +215,12 @@ def main():
     print("\n=== Evaluation Results ===")
     for k, v in metrics.items():
         print(f"  {k}: {v:.4f}" if isinstance(v, float) else f"  {k}: {v}")
+
+    output_path = Path("outputs/eval_loo.json")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump({"protocol": "leave_one_out", "metrics": metrics}, f, indent=2)
+    print(f"\nWrote metrics to {output_path}")
 
 
 if __name__ == "__main__":
