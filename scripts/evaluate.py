@@ -1,4 +1,5 @@
 """Offline evaluation script for Two-Tower movie recommender."""
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -168,6 +169,19 @@ def compute_metrics(
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate Two-Tower on the leave-one-out split")
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default="checkpoints/two_tower/best_model.pt",
+        help="Checkpoint to evaluate. Use an immutable epoch_N.pt when training is still "
+             "running -- best_model.pt is rewritten on every val improvement and torch.save "
+             "is not atomic.",
+    )
+    parser.add_argument("--output", type=str, default="outputs/eval_loo.json", help="Metrics output path")
+    parser.add_argument("-k", type=int, default=10, help="Cutoff K for recall/NDCG")
+    args = parser.parse_args()
+
     data_config = load_config("configs/data.yaml")
     splits_dir = Path(data_config["splits"]["output_dir"])
 
@@ -180,10 +194,7 @@ def main():
     print(f"  Users: {len(user_mapping)}, Items: {len(item_mapping)}")
 
     print("Loading model...")
-    model, ckpt_config = load_model(
-        Path("checkpoints/two_tower/best_model.pt"),
-        device,
-    )
+    model, ckpt_config = load_model(Path(args.checkpoint), device)
     ckpt_n_items = ckpt_config["n_items"]
     print(f"  Checkpoint n_items: {ckpt_n_items}")
 
@@ -209,17 +220,21 @@ def main():
         test_df,
         user_mapping,
         item_mapping,
-        k=10,
+        k=args.k,
     )
 
     print("\n=== Evaluation Results ===")
-    for k, v in metrics.items():
-        print(f"  {k}: {v:.4f}" if isinstance(v, float) else f"  {k}: {v}")
+    for key, v in metrics.items():
+        print(f"  {key}: {v:.4f}" if isinstance(v, float) else f"  {key}: {v}")
 
-    output_path = Path("outputs/eval_loo.json")
+    output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
-        json.dump({"protocol": "leave_one_out", "metrics": metrics}, f, indent=2)
+        json.dump(
+            {"protocol": "leave_one_out", "checkpoint": args.checkpoint, "metrics": metrics},
+            f,
+            indent=2,
+        )
     print(f"\nWrote metrics to {output_path}")
 
 
