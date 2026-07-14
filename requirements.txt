@@ -9,6 +9,7 @@ pyyaml
 
 # Groq API
 groq
+python-dotenv
 
 # C++ bindings (built locally)
 # pybind11

@@ -101,7 +101,7 @@ Example: [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]"""
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
-                max_tokens=2048,
+                max_tokens=4096,
             )
 
             response_text = response.choices[0].message.content or ""
@@ -144,6 +144,17 @@ Example: [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]"""
                 all_results.append(movie)
 
         all_results.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
+
+        if not all_results:
+            # Groq failed or was unparseable for every batch — fall back to
+            # upstream (HNSW) order rather than returning nothing.
+            print("Warning: reranker produced no results, falling back to retrieval order")
+            fallback = []
+            for movie in movies[:top_k]:
+                movie = movie.copy()
+                movie["rerank_score"] = 0.0
+                fallback.append(movie)
+            return fallback
 
         return all_results[:top_k]
 

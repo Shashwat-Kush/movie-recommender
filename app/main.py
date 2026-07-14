@@ -13,8 +13,10 @@ import pyarrow.parquet as pq
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 from src.models.two_tower import TwoTowerWithMetadata
 from src.models.reranker import GroqReranker, create_reranker
