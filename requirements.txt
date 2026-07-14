@@ -1,0 +1,29 @@
+# Core ML/Data
+torch
+torchvision
+torchaudio
+numpy
+pandas
+pyarrow
+pyyaml
+
+# Groq API
+groq
+
+# C++ bindings (built locally)
+# pybind11
+
+# Evaluation
+scikit-learn
+scipy
+
+# Optional: Sentence transformers for cold-start
+sentence-transformers
+
+# Optional: FastAPI for serving
+fastapi
+uvicorn
+
+# Optional: Jupyter for notebooks
+jupyter
+ipykernel

@@ -1,0 +1,42 @@
+# Data Pipeline Configuration
+raw:
+  ratings: "data/raw/rating.csv"
+  movies: "data/raw/movie.csv"
+  tags: "data/raw/tag.csv"
+  genome_scores: "data/raw/genome_scores.csv"
+  genome_tags: "data/raw/genome_tags.csv"
+  links: "data/raw/link.csv"
+
+parquet:
+  output_dir: "data/parquet"
+  ratings:
+    partition_cols: ["user_bucket"]
+    num_buckets: 256
+    chunk_size: 100000
+    compression: "zstd"
+    compression_level: 3
+  movies:
+    chunk_size: 50000
+  tags:
+    chunk_size: 50000
+  genome_scores:
+    chunk_size: 100000
+  genome_tags:
+    chunk_size: 50000
+  links:
+    chunk_size: 50000
+
+splits:
+  output_dir: "data/processed"
+  time_split:
+    train_cutoff: "2009-01-01"
+    val_cutoff: "2012-01-01"
+    test_cutoff: "2015-12-31"
+  loo_split:
+    holdout_per_user: 1
+    min_interactions_per_user: 5
+  test_size: 0.1
+
+memory:
+  gc_threshold_mb: 500
+  max_workers: 1

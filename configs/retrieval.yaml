@@ -1,0 +1,7 @@
+# HNSW Retrieval Configuration
+max_elements: 70000
+M: 32
+ef_construction: 200
+ef_search: 100
+random_seed: 42
+pool_size_bytes: 2147483648  # 2GB
