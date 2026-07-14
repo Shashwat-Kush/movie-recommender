@@ -305,9 +305,9 @@ class TwoTowerTrainer:
 
         detached_loss = loss.detach() * self.accum_steps
         del batch, user_ids, pos_item_ids, pos_item_metadata, neg_item_ids, neg_item_metadata, loss
-        torch.mps.empty_cache()
-        gc.collect()
-
+        # Cleanup runs every 100 batches in train_epoch, not per step: empty_cache() per step
+        # forces the allocator to return blocks it immediately reallocates, and the del above
+        # already drops the refcounts (gc.collect only matters for reference cycles).
         return detached_loss
 
     @torch.no_grad()
@@ -340,8 +340,9 @@ class TwoTowerTrainer:
             num_batches += 1
 
             del batch, user_ids, pos_item_ids, pos_item_metadata, neg_item_ids, neg_item_metadata, loss
-            torch.mps.empty_cache()
-            gc.collect()
+            if num_batches % 100 == 0:
+                torch.mps.empty_cache()
+                gc.collect()
 
         val_loss = total_loss / max(num_batches, 1)
         return {"val_loss": val_loss}
