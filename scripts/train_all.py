@@ -210,17 +210,18 @@ class TwoTowerTrainer:
         self.grad_clip = float(self.config.get("grad_clip", 1.0))
         self.loss_type = self.config.get("loss_type", "bce")
 
-        # LR scheduler config
+        # LR scheduler config. Cast numerics: YAML 1.1 reads unpunctuated exponents like
+        # 1e-6 as str, not float (it wants 1.0e-6), which blows up on first arithmetic.
         lr_sched_cfg = self.config.get("lr_scheduler", {})
         self.lr_scheduler_type = lr_sched_cfg.get("type", "reduce_on_plateau")
-        self.lr_scheduler_patience = lr_sched_cfg.get("patience", 3)
-        self.lr_scheduler_factor = lr_sched_cfg.get("factor", 0.5)
-        self.lr_scheduler_min_lr = lr_sched_cfg.get("min_lr", 1e-6)
+        self.lr_scheduler_patience = int(lr_sched_cfg.get("patience", 3))
+        self.lr_scheduler_factor = float(lr_sched_cfg.get("factor", 0.5))
+        self.lr_scheduler_min_lr = float(lr_sched_cfg.get("min_lr", 1e-6))
 
         # Early stopping config
         es_cfg = self.config.get("early_stopping", {})
-        self.early_stopping_patience = es_cfg.get("patience", 5)
-        self.early_stopping_min_delta = es_cfg.get("min_delta", 1e-4)
+        self.early_stopping_patience = int(es_cfg.get("patience", 5))
+        self.early_stopping_min_delta = float(es_cfg.get("min_delta", 1e-4))
 
         # Logging config
         self.log_interval = self.config.get("log_interval", 500)
@@ -395,8 +396,18 @@ class TwoTowerTrainer:
                 f"Val Loss: {val_metrics.get('val_loss', 0):.4f}"
             )
 
-            # LR scheduler step
             val_loss = val_metrics.get("val_loss", float("inf"))
+
+            # Persist before any bookkeeping that can raise or break: an epoch costs ~8
+            # minutes, and previously a failure in the early-stopping check discarded it
+            # entirely -- as did a normal early-stopping break, which skipped these saves.
+            if val_loss < self.best_val_loss:
+                self.best_val_loss = val_loss
+                self.save_checkpoint("best.pt")
+                self.save_inference_checkpoint("best_model.pt")
+
+            self.save_checkpoint(f"epoch_{epoch}.pt")
+
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step(val_loss)
 
@@ -410,13 +421,6 @@ class TwoTowerTrainer:
                 if self.epochs_no_improve >= self.early_stopping_patience:
                     print(f"  Early stopping triggered after {epoch + 1} epochs")
                     break
-
-            if val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss
-                self.save_checkpoint("best.pt")
-                self.save_inference_checkpoint("best_model.pt")
-
-            self.save_checkpoint(f"epoch_{epoch}.pt")
 
             torch.mps.empty_cache()
             gc.collect()
