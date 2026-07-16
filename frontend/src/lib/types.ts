@@ -84,6 +84,8 @@ export interface ProjectionPoint {
   genre: string;
   x: number;
   y: number;
+  /** Third PCA component; present in current artifacts (3D galaxy view). */
+  z?: number;
 }
 
 export interface EvalMetrics {

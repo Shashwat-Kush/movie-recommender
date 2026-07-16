@@ -15,6 +15,7 @@ function GithubIcon({ size = 16 }: { size?: number }) {
 }
 import { useSettings } from "@/lib/store";
 import { LIVE_MODE } from "@/lib/api";
+import { CommandPalette } from "@/components/command-palette";
 
 const REPO_URL = "https://github.com/Shashwat-Kush/movie-recommender";
 
@@ -93,6 +94,9 @@ function Nav() {
           >
             <GithubIcon size={16} />
           </a>
+          <span className="ml-1 hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] text-text-faint sm:inline">
+            ⌘K
+          </span>
         </div>
       </div>
     </nav>
@@ -124,9 +128,26 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset.reduceMotion = String(reduceMotion);
   }, [reduceMotion]);
+
+  // One delegated listener drives every .spotlight card's cursor highlight.
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const card = (e.target as HTMLElement | null)?.closest?.(".spotlight") as HTMLElement | null;
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+      card.style.setProperty("--my", `${e.clientY - rect.top}px`);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="aurora" aria-hidden />
+      <div className="vignette" aria-hidden />
+      <div className="grain" aria-hidden />
+      <CommandPalette />
       <div className="flex min-h-screen flex-col">
         <ModeBanner />
         <Nav />

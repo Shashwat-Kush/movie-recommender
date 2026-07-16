@@ -1,7 +1,8 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, Play } from "lucide-react";
 import type { RecommendResponse } from "@/lib/types";
 import { titleOnly, yearOf } from "@/lib/format";
 import { Tooltip } from "@/components/ui";
@@ -13,7 +14,21 @@ const GAP = 6;
  * retrieval order, the LLM's final order on the right, movement lines between.
  * Every number is real recorded output. */
 export function RankFlow({ response }: { response: RecommendResponse }) {
-  const { candidates, recommendations } = response;
+  const { candidates } = response;
+  // Replay: briefly show the right column in retrieval order, then FLIP-animate
+  // each row to its final LLM position (framer-motion layout animation).
+  const [replaying, setReplaying] = useState(false);
+  const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recommendations = replaying
+    ? [...response.recommendations].sort((a, b) => (a.retrieval_rank ?? 99) - (b.retrieval_rank ?? 99))
+    : response.recommendations;
+
+  const replay = () => {
+    if (replayTimer.current) clearTimeout(replayTimer.current);
+    setReplaying(true);
+    replayTimer.current = setTimeout(() => setReplaying(false), 900);
+  };
+
   const y = (i: number) => i * (ROW_H + GAP) + ROW_H / 2;
   const leftIndex = new Map(candidates.map((c, i) => [c.movieId, i]));
 
@@ -80,11 +95,20 @@ export function RankFlow({ response }: { response: RecommendResponse }) {
 
       {/* Right: after LLM rerank */}
       <div>
-        <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-text-faint">
-          <Tooltip label="Final order after Cerebras gpt-oss-120b ranked the 25 candidates against your query.">
-            after LLM rerank
-          </Tooltip>{" "}
-          · {recommendations.length}
+        <h3 className="mb-3 flex items-center justify-between font-mono text-xs uppercase tracking-[0.15em] text-text-faint">
+          <span>
+            <Tooltip label="Final order after Cerebras gpt-oss-120b ranked the 25 candidates against your query.">
+              after LLM rerank
+            </Tooltip>{" "}
+            · {recommendations.length}
+          </span>
+          <button
+            onClick={replay}
+            className="flex items-center gap-1 rounded-md border border-border px-2 py-0.5 normal-case tracking-normal text-text-dim transition-colors hover:border-accent hover:text-accent"
+            title="Replay: watch the rows physically re-sort from retrieval order to the LLM's order"
+          >
+            <Play size={10} /> replay
+          </button>
         </h3>
         <div className="flex flex-col" style={{ gap: GAP }}>
           {recommendations.map((r, i) => {
@@ -92,9 +116,10 @@ export function RankFlow({ response }: { response: RecommendResponse }) {
             return (
               <motion.div
                 key={r.movieId}
+                layout
+                transition={{ layout: { type: "spring", stiffness: 240, damping: 26 } }}
                 initial={{ opacity: 0, x: 6 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + i * 0.05, duration: 0.2 }}
                 style={{ height: ROW_H }}
                 className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 hover:border-border-strong"
               >

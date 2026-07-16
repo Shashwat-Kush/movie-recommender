@@ -3,55 +3,63 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ProjectionPoint } from "@/lib/types";
 import { titleOnly } from "@/lib/format";
+import { useSettings } from "@/lib/store";
 
-const GENRE_COLORS: Record<string, string> = {
-  Action: "#8b5cf6",
-  Adventure: "#a78bfa",
-  Animation: "#f0abfc",
-  Comedy: "#fbbf24",
-  Crime: "#f87171",
-  Documentary: "#94a3b8",
-  Drama: "#60a5fa",
-  Fantasy: "#c4b5fd",
-  Horror: "#fb7185",
-  Romance: "#f9a8d4",
-  "Sci-Fi": "#34d399",
-  Thriller: "#fb923c",
-};
-const FALLBACK = "#62626c";
+import { GENRE_COLORS, GENRE_FALLBACK as FALLBACK } from "@/lib/colors";
 
-/** Canvas scatter of the 2D PCA projection of the served model's item
- * embeddings. Hover highlights the point's nearest neighbors in the
- * projection; the search box jumps to a title. */
+const W = 860;
+const H = 540;
+const FOCAL = 2.6; // perspective strength
+
+/** The catalog as a galaxy: a rotating 3D point cloud of the served model's
+ * item embeddings (3-component PCA). Drag to rotate, hover for titles and
+ * nearest neighbors, search to fly to a movie. Pure canvas — no 3D deps. */
 export function EmbeddingScatter({ points }: { points: ProjectionPoint[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<ProjectionPoint | null>(null);
-  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ProjectionPoint | null>(null);
+  const [search, setSearch] = useState("");
+  const reduceMotion = useSettings((s) => s.reduceMotion);
 
-  const bounds = useMemo(() => {
+  // Rotation state lives in refs so the RAF loop never re-renders React.
+  const rot = useRef({ yaw: 0.6, pitch: 0.25 });
+  const targetRot = useRef<{ yaw: number; pitch: number } | null>(null);
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const projected = useRef<Float32Array>(new Float32Array(0));
+
+  // Normalize coordinates to a unit-ish cube once.
+  const cloud = useMemo(() => {
     const xs = points.map((p) => p.x);
     const ys = points.map((p) => p.y);
-    return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+    const zs = points.map((p) => p.z ?? 0);
+    const span = (a: number[]) => Math.max(...a) - Math.min(...a) || 1;
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+    const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    const cz = (Math.max(...zs) + Math.min(...zs)) / 2;
+    const s = 2 / Math.max(span(xs), span(ys), span(zs));
+    return points.map((p) => ({
+      ...p,
+      nx: (p.x - cx) * s,
+      ny: (p.y - cy) * s,
+      nz: ((p.z ?? 0) - cz) * s,
+      color: GENRE_COLORS[p.genre] ?? FALLBACK,
+    }));
   }, [points]);
 
-  const W = 860;
-  const H = 520;
-  const PAD = 24;
-  const px = (p: ProjectionPoint) => PAD + ((p.x - bounds.minX) / (bounds.maxX - bounds.minX)) * (W - 2 * PAD);
-  const py = (p: ProjectionPoint) => PAD + ((p.y - bounds.minY) / (bounds.maxY - bounds.minY)) * (H - 2 * PAD);
-
   const focus = hover ?? selected;
-
-  const neighbors = useMemo(() => {
+  const neighborIds = useMemo(() => {
     if (!focus) return new Set<number>();
-    const d = points
-      .filter((p) => p.movieId !== focus.movieId)
-      .map((p) => ({ id: p.movieId, d: (p.x - focus.x) ** 2 + (p.y - focus.y) ** 2 }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, 8);
-    return new Set(d.map((x) => x.id));
-  }, [focus, points]);
+    const f = cloud.find((p) => p.movieId === focus.movieId);
+    if (!f) return new Set<number>();
+    return new Set(
+      cloud
+        .filter((p) => p.movieId !== f.movieId)
+        .map((p) => ({ id: p.movieId, d: (p.nx - f.nx) ** 2 + (p.ny - f.ny) ** 2 + (p.nz - f.nz) ** 2 }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 10)
+        .map((x) => x.id),
+    );
+  }, [focus, cloud]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,62 +69,143 @@ export function EmbeddingScatter({ points }: { points: ProjectionPoint[] }) {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, W, H);
 
-    for (const p of points) {
-      const isFocus = focus?.movieId === p.movieId;
-      const isNeighbor = neighbors.has(p.movieId);
-      ctx.beginPath();
-      ctx.arc(px(p), py(p), isFocus ? 5 : isNeighbor ? 3.5 : 2, 0, Math.PI * 2);
-      ctx.fillStyle = GENRE_COLORS[p.genre] ?? FALLBACK;
-      ctx.globalAlpha = focus ? (isFocus ? 1 : isNeighbor ? 0.9 : 0.12) : 0.55;
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points, focus, neighbors]);
+    projected.current = new Float32Array(cloud.length * 3);
+    let raf = 0;
+
+    const draw = () => {
+      // Ease toward a fly-to target; otherwise idle-spin (unless dragging/reduced).
+      if (targetRot.current) {
+        const t = targetRot.current;
+        rot.current.yaw += (t.yaw - rot.current.yaw) * 0.08;
+        rot.current.pitch += (t.pitch - rot.current.pitch) * 0.08;
+        if (Math.abs(t.yaw - rot.current.yaw) + Math.abs(t.pitch - rot.current.pitch) < 0.002) {
+          targetRot.current = null;
+        }
+      } else if (!drag.current && !reduceMotion) {
+        rot.current.yaw += 0.0016;
+      }
+
+      const { yaw, pitch } = rot.current;
+      const cy = Math.cos(yaw), sy = Math.sin(yaw);
+      const cp = Math.cos(pitch), sp = Math.sin(pitch);
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      // Depth-sort indices each frame (cheap at 3k points)
+      const order: number[] = [];
+      for (let i = 0; i < cloud.length; i++) {
+        const p = cloud[i];
+        const x1 = p.nx * cy + p.nz * sy;
+        const z1 = -p.nx * sy + p.nz * cy;
+        const y2 = p.ny * cp - z1 * sp;
+        const z2 = p.ny * sp + z1 * cp;
+        const scale = FOCAL / (FOCAL + z2);
+        const px = W / 2 + x1 * scale * (H / 2.6);
+        const py = H / 2 + y2 * scale * (H / 2.6);
+        projected.current[i * 3] = px;
+        projected.current[i * 3 + 1] = py;
+        projected.current[i * 3 + 2] = z2;
+        order.push(i);
+      }
+      order.sort((a, b) => projected.current[b * 3 + 2] - projected.current[a * 3 + 2]);
+
+      for (const i of order) {
+        const p = cloud[i];
+        const px = projected.current[i * 3];
+        const py = projected.current[i * 3 + 1];
+        const z = projected.current[i * 3 + 2];
+        const depth = (1 - z / 1.6) / 2 + 0.5; // ~[0.5, 1] front boost
+        const isFocus = focus?.movieId === p.movieId;
+        const isNeighbor = neighborIds.has(p.movieId);
+
+        ctx.beginPath();
+        ctx.arc(px, py, isFocus ? 5.5 : isNeighbor ? 3.5 : 1.6 * depth + 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = focus ? (isFocus ? 1 : isNeighbor ? 0.95 : 0.07) : 0.28 + 0.4 * depth;
+        ctx.fill();
+
+        if (isFocus) {
+          ctx.globalAlpha = 0.9;
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(px, py, 9, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.font = "11px var(--font-mono, monospace)";
+          ctx.fillStyle = "#ededf0";
+          ctx.fillText(titleOnly(p.title), Math.min(px + 12, W - 160), py - 8);
+        }
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [cloud, focus, neighborIds, reduceMotion]);
+
+  const canvasPos = (e: React.MouseEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return { x: ((e.clientX - rect.left) / rect.width) * W, y: ((e.clientY - rect.top) / rect.height) * H };
+  };
 
   const onMove = (e: React.MouseEvent) => {
-    const rect = canvasRef.current!.getBoundingClientRect();
-    const mx = ((e.clientX - rect.left) / rect.width) * W;
-    const my = ((e.clientY - rect.top) / rect.height) * H;
+    if (drag.current) {
+      const dx = e.clientX - drag.current.x;
+      const dy = e.clientY - drag.current.y;
+      drag.current = { x: e.clientX, y: e.clientY };
+      rot.current.yaw += dx * 0.005;
+      rot.current.pitch = Math.max(-1.2, Math.min(1.2, rot.current.pitch + dy * 0.005));
+      targetRot.current = null;
+      return;
+    }
+    const { x: mx, y: my } = canvasPos(e);
     let best: ProjectionPoint | null = null;
-    let bestD = 12 ** 2;
-    for (const p of points) {
-      const d = (px(p) - mx) ** 2 + (py(p) - my) ** 2;
+    let bestD = 11 ** 2;
+    for (let i = 0; i < cloud.length; i++) {
+      const d = (projected.current[i * 3] - mx) ** 2 + (projected.current[i * 3 + 1] - my) ** 2;
       if (d < bestD) {
         bestD = d;
-        best = p;
+        best = cloud[i];
       }
     }
     setHover(best);
   };
 
-  const matches = search.length >= 2
-    ? points.filter((p) => p.title.toLowerCase().includes(search.toLowerCase())).slice(0, 6)
-    : [];
+  const flyTo = (p: ProjectionPoint) => {
+    const c = cloud.find((q) => q.movieId === p.movieId);
+    if (!c) return;
+    // Rotate so the point faces the camera (z minimal): solve yaw/pitch.
+    const yaw = Math.atan2(-c.nx, -c.nz);
+    const r = Math.hypot(c.nx, c.nz);
+    const pitch = Math.atan2(c.ny, r);
+    targetRot.current = { yaw, pitch };
+    setSelected(p);
+    setSearch("");
+  };
+
+  const matches =
+    search.length >= 2 ? cloud.filter((p) => p.title.toLowerCase().includes(search.toLowerCase())).slice(0, 6) : [];
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div className="border-gradient glass rounded-2xl p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="relative">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="find a movie…"
+            placeholder="fly to a movie…"
             aria-label="Search embedding space"
-            className="w-56 rounded-lg border border-border bg-bg px-3 py-1.5 text-xs outline-none placeholder:text-text-faint focus:border-border-strong"
+            className="w-56 rounded-lg border border-border bg-bg px-3 py-1.5 text-xs outline-none placeholder:text-text-faint focus:border-accent"
           />
           {matches.length > 0 && (
-            <div className="absolute top-full z-30 mt-1 w-72 rounded-lg border border-border bg-card p-1 shadow-xl">
+            <div className="glass absolute top-full z-30 mt-1 w-72 rounded-lg border border-border p-1 shadow-xl">
               {matches.map((m) => (
                 <button
                   key={m.movieId}
-                  onClick={() => {
-                    setSelected(m);
-                    setSearch("");
-                  }}
+                  onClick={() => flyTo(m)}
                   className="block w-full truncate rounded-md px-2 py-1.5 text-left text-xs text-text-dim hover:bg-bg hover:text-text"
                 >
                   {m.title}
@@ -126,16 +215,23 @@ export function EmbeddingScatter({ points }: { points: ProjectionPoint[] }) {
           )}
         </div>
         <p className="font-mono text-[11px] text-text-faint">
-          {focus ? `${titleOnly(focus.title)} · ${focus.genre}` : `${points.length.toLocaleString()} most-rated movies · PCA of 128-dim item embeddings`}
+          {focus
+            ? `${titleOnly(focus.title)} · ${focus.genre}`
+            : `${points.length.toLocaleString()} movies · 3D PCA of 128-dim item embeddings · drag to rotate`}
         </p>
       </div>
       <canvas
         ref={canvasRef}
-        style={{ width: "100%", aspectRatio: `${W}/${H}` }}
+        style={{ width: "100%", aspectRatio: `${W}/${H}`, cursor: drag.current ? "grabbing" : "grab" }}
         onMouseMove={onMove}
-        onMouseLeave={() => setHover(null)}
+        onMouseLeave={() => {
+          setHover(null);
+          drag.current = null;
+        }}
+        onMouseDown={(e) => (drag.current = { x: e.clientX, y: e.clientY })}
+        onMouseUp={() => (drag.current = null)}
         role="img"
-        aria-label="2D projection of movie embeddings, colored by primary genre"
+        aria-label="Rotating 3D projection of movie embeddings, colored by primary genre"
       />
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
         {Object.entries(GENRE_COLORS).map(([g, c]) => (

@@ -267,7 +267,561 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 69.7,
+          "hnsw_ms": 68.7,
+          "rerank_ms": 0.7
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 1,
+        "query": "feel-good comedy for a rainy day",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 4886,
+            "title": "Monsters, Inc. (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "rerank_score": 25.0,
+            "retrieval_rank": 6,
+            "distance": 0.777709037065506
+          },
+          {
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "rerank_score": 24.0,
+            "retrieval_rank": 7,
+            "distance": 0.7789281904697418
+          },
+          {
+            "movieId": 1,
+            "title": "Toy Story (1995)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "rerank_score": 23.0,
+            "retrieval_rank": 8,
+            "distance": 0.7819135934114456
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "rerank_score": 22.0,
+            "retrieval_rank": 16,
+            "distance": 0.7891627103090286
+          },
+          {
+            "movieId": 1270,
+            "title": "Back to the Future (1985)",
+            "genres": "Adventure|Comedy|Sci-Fi",
+            "rerank_score": 21.0,
+            "retrieval_rank": 2,
+            "distance": 0.7709293067455292
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "rerank_score": 20.0,
+            "retrieval_rank": 21,
+            "distance": 0.7928571403026581
+          },
+          {
+            "movieId": 2987,
+            "title": "Who Framed Roger Rabbit? (1988)",
+            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
+            "rerank_score": 19.0,
+            "retrieval_rank": 18,
+            "distance": 0.792154923081398
+          },
+          {
+            "movieId": 1527,
+            "title": "Fifth Element, The (1997)",
+            "genres": "Action|Adventure|Comedy|Sci-Fi",
+            "rerank_score": 18.0,
+            "retrieval_rank": 9,
+            "distance": 0.7827619016170502
+          },
+          {
+            "movieId": 6659,
+            "title": "Tremors (1990)",
+            "genres": "Comedy|Horror|Sci-Fi",
+            "rerank_score": 17.0,
+            "retrieval_rank": 3,
+            "distance": 0.7728208005428314
+          },
+          {
+            "movieId": 2657,
+            "title": "Rocky Horror Picture Show, The (1975)",
+            "genres": "Comedy|Horror|Musical|Sci-Fi",
+            "rerank_score": 16.0,
+            "retrieval_rank": 11,
+            "distance": 0.7873123586177826
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 1210,
+            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
+            "genres": "Action|Adventure|Sci-Fi",
+            "retrieval_rank": 1,
+            "distance": 0.760751411318779
+          },
+          {
+            "movieId": 1270,
+            "title": "Back to the Future (1985)",
+            "genres": "Adventure|Comedy|Sci-Fi",
+            "retrieval_rank": 2,
+            "distance": 0.7709293067455292
+          },
+          {
+            "movieId": 6659,
+            "title": "Tremors (1990)",
+            "genres": "Comedy|Horror|Sci-Fi",
+            "retrieval_rank": 3,
+            "distance": 0.7728208005428314
+          },
+          {
+            "movieId": 480,
+            "title": "Jurassic Park (1993)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 4,
+            "distance": 0.7757308334112167
+          },
+          {
+            "movieId": 5349,
+            "title": "Spider-Man (2002)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 5,
+            "distance": 0.7772562652826309
+          },
+          {
+            "movieId": 4886,
+            "title": "Monsters, Inc. (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 6,
+            "distance": 0.777709037065506
+          },
+          {
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 7,
+            "distance": 0.7789281904697418
+          },
+          {
+            "movieId": 1,
+            "title": "Toy Story (1995)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 8,
+            "distance": 0.7819135934114456
+          },
+          {
+            "movieId": 1527,
+            "title": "Fifth Element, The (1997)",
+            "genres": "Action|Adventure|Comedy|Sci-Fi",
+            "retrieval_rank": 9,
+            "distance": 0.7827619016170502
+          },
+          {
+            "movieId": 3471,
+            "title": "Close Encounters of the Third Kind (1977)",
+            "genres": "Adventure|Drama|Sci-Fi",
+            "retrieval_rank": 10,
+            "distance": 0.7832397222518921
+          },
+          {
+            "movieId": 2657,
+            "title": "Rocky Horror Picture Show, The (1975)",
+            "genres": "Comedy|Horror|Musical|Sci-Fi",
+            "retrieval_rank": 11,
+            "distance": 0.7873123586177826
+          },
+          {
+            "movieId": 3793,
+            "title": "X-Men (2000)",
+            "genres": "Action|Adventure|Sci-Fi",
+            "retrieval_rank": 12,
+            "distance": 0.787398636341095
+          },
+          {
+            "movieId": 1274,
+            "title": "Akira (1988)",
+            "genres": "Action|Adventure|Animation|Sci-Fi",
+            "retrieval_rank": 13,
+            "distance": 0.7875173389911652
+          },
+          {
+            "movieId": 1206,
+            "title": "Clockwork Orange, A (1971)",
+            "genres": "Crime|Drama|Sci-Fi|Thriller",
+            "retrieval_rank": 14,
+            "distance": 0.7877006232738495
+          },
+          {
+            "movieId": 5618,
+            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
+            "genres": "Adventure|Animation|Fantasy",
+            "retrieval_rank": 15,
+            "distance": 0.7881932556629181
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 16,
+            "distance": 0.7891627103090286
+          },
+          {
+            "movieId": 3527,
+            "title": "Predator (1987)",
+            "genres": "Action|Sci-Fi|Thriller",
+            "retrieval_rank": 17,
+            "distance": 0.7907281368970871
+          },
+          {
+            "movieId": 2987,
+            "title": "Who Framed Roger Rabbit? (1988)",
+            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
+            "retrieval_rank": 18,
+            "distance": 0.792154923081398
+          },
+          {
+            "movieId": 551,
+            "title": "Nightmare Before Christmas, The (1993)",
+            "genres": "Animation|Children|Fantasy|Musical",
+            "retrieval_rank": 19,
+            "distance": 0.7925318777561188
+          },
+          {
+            "movieId": 6979,
+            "title": "WarGames (1983)",
+            "genres": "Drama|Sci-Fi|Thriller",
+            "retrieval_rank": 20,
+            "distance": 0.7928256392478943
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 21,
+            "distance": 0.7928571403026581
+          },
+          {
+            "movieId": 592,
+            "title": "Batman (1989)",
+            "genres": "Action|Crime|Thriller",
+            "retrieval_rank": 22,
+            "distance": 0.7929740101099014
+          },
+          {
+            "movieId": 2115,
+            "title": "Indiana Jones and the Temple of Doom (1984)",
+            "genres": "Action|Adventure|Fantasy",
+            "retrieval_rank": 23,
+            "distance": 0.7936302274465561
+          },
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.79389688372612
+          },
+          {
+            "movieId": 2455,
+            "title": "Fly, The (1986)",
+            "genres": "Drama|Horror|Sci-Fi|Thriller",
+            "retrieval_rank": 25,
+            "distance": 0.7944576442241669
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 73.4,
+          "rerank_ms": 3.1
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 1,
+        "query": "dark crime drama with a great ending",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 1206,
+            "title": "Clockwork Orange, A (1971)",
+            "genres": "Crime|Drama|Sci-Fi|Thriller",
+            "rerank_score": 25.0,
+            "retrieval_rank": 14,
+            "distance": 0.7877006232738495
+          },
+          {
+            "movieId": 592,
+            "title": "Batman (1989)",
+            "genres": "Action|Crime|Thriller",
+            "rerank_score": 24.0,
+            "retrieval_rank": 22,
+            "distance": 0.7929740101099014
+          },
+          {
+            "movieId": 2987,
+            "title": "Who Framed Roger Rabbit? (1988)",
+            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
+            "rerank_score": 23.0,
+            "retrieval_rank": 18,
+            "distance": 0.792154923081398
+          },
+          {
+            "movieId": 2455,
+            "title": "Fly, The (1986)",
+            "genres": "Drama|Horror|Sci-Fi|Thriller",
+            "rerank_score": 22.0,
+            "retrieval_rank": 25,
+            "distance": 0.7944576442241669
+          },
+          {
+            "movieId": 6979,
+            "title": "WarGames (1983)",
+            "genres": "Drama|Sci-Fi|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 20,
+            "distance": 0.7928256392478943
+          },
+          {
+            "movieId": 3471,
+            "title": "Close Encounters of the Third Kind (1977)",
+            "genres": "Adventure|Drama|Sci-Fi",
+            "rerank_score": 20.0,
+            "retrieval_rank": 10,
+            "distance": 0.7832397222518921
+          },
+          {
+            "movieId": 1210,
+            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
+            "genres": "Action|Adventure|Sci-Fi",
+            "rerank_score": 19.0,
+            "retrieval_rank": 1,
+            "distance": 0.760751411318779
+          },
+          {
+            "movieId": 5349,
+            "title": "Spider-Man (2002)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "rerank_score": 18.0,
+            "retrieval_rank": 5,
+            "distance": 0.7772562652826309
+          },
+          {
+            "movieId": 480,
+            "title": "Jurassic Park (1993)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "rerank_score": 17.0,
+            "retrieval_rank": 4,
+            "distance": 0.7757308334112167
+          },
+          {
+            "movieId": 1527,
+            "title": "Fifth Element, The (1997)",
+            "genres": "Action|Adventure|Comedy|Sci-Fi",
+            "rerank_score": 16.0,
+            "retrieval_rank": 9,
+            "distance": 0.7827619016170502
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 1210,
+            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
+            "genres": "Action|Adventure|Sci-Fi",
+            "retrieval_rank": 1,
+            "distance": 0.760751411318779
+          },
+          {
+            "movieId": 1270,
+            "title": "Back to the Future (1985)",
+            "genres": "Adventure|Comedy|Sci-Fi",
+            "retrieval_rank": 2,
+            "distance": 0.7709293067455292
+          },
+          {
+            "movieId": 6659,
+            "title": "Tremors (1990)",
+            "genres": "Comedy|Horror|Sci-Fi",
+            "retrieval_rank": 3,
+            "distance": 0.7728208005428314
+          },
+          {
+            "movieId": 480,
+            "title": "Jurassic Park (1993)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 4,
+            "distance": 0.7757308334112167
+          },
+          {
+            "movieId": 5349,
+            "title": "Spider-Man (2002)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 5,
+            "distance": 0.7772562652826309
+          },
+          {
+            "movieId": 4886,
+            "title": "Monsters, Inc. (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 6,
+            "distance": 0.777709037065506
+          },
+          {
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 7,
+            "distance": 0.7789281904697418
+          },
+          {
+            "movieId": 1,
+            "title": "Toy Story (1995)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 8,
+            "distance": 0.7819135934114456
+          },
+          {
+            "movieId": 1527,
+            "title": "Fifth Element, The (1997)",
+            "genres": "Action|Adventure|Comedy|Sci-Fi",
+            "retrieval_rank": 9,
+            "distance": 0.7827619016170502
+          },
+          {
+            "movieId": 3471,
+            "title": "Close Encounters of the Third Kind (1977)",
+            "genres": "Adventure|Drama|Sci-Fi",
+            "retrieval_rank": 10,
+            "distance": 0.7832397222518921
+          },
+          {
+            "movieId": 2657,
+            "title": "Rocky Horror Picture Show, The (1975)",
+            "genres": "Comedy|Horror|Musical|Sci-Fi",
+            "retrieval_rank": 11,
+            "distance": 0.7873123586177826
+          },
+          {
+            "movieId": 3793,
+            "title": "X-Men (2000)",
+            "genres": "Action|Adventure|Sci-Fi",
+            "retrieval_rank": 12,
+            "distance": 0.787398636341095
+          },
+          {
+            "movieId": 1274,
+            "title": "Akira (1988)",
+            "genres": "Action|Adventure|Animation|Sci-Fi",
+            "retrieval_rank": 13,
+            "distance": 0.7875173389911652
+          },
+          {
+            "movieId": 1206,
+            "title": "Clockwork Orange, A (1971)",
+            "genres": "Crime|Drama|Sci-Fi|Thriller",
+            "retrieval_rank": 14,
+            "distance": 0.7877006232738495
+          },
+          {
+            "movieId": 5618,
+            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
+            "genres": "Adventure|Animation|Fantasy",
+            "retrieval_rank": 15,
+            "distance": 0.7881932556629181
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 16,
+            "distance": 0.7891627103090286
+          },
+          {
+            "movieId": 3527,
+            "title": "Predator (1987)",
+            "genres": "Action|Sci-Fi|Thriller",
+            "retrieval_rank": 17,
+            "distance": 0.7907281368970871
+          },
+          {
+            "movieId": 2987,
+            "title": "Who Framed Roger Rabbit? (1988)",
+            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
+            "retrieval_rank": 18,
+            "distance": 0.792154923081398
+          },
+          {
+            "movieId": 551,
+            "title": "Nightmare Before Christmas, The (1993)",
+            "genres": "Animation|Children|Fantasy|Musical",
+            "retrieval_rank": 19,
+            "distance": 0.7925318777561188
+          },
+          {
+            "movieId": 6979,
+            "title": "WarGames (1983)",
+            "genres": "Drama|Sci-Fi|Thriller",
+            "retrieval_rank": 20,
+            "distance": 0.7928256392478943
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 21,
+            "distance": 0.7928571403026581
+          },
+          {
+            "movieId": 592,
+            "title": "Batman (1989)",
+            "genres": "Action|Crime|Thriller",
+            "retrieval_rank": 22,
+            "distance": 0.7929740101099014
+          },
+          {
+            "movieId": 2115,
+            "title": "Indiana Jones and the Temple of Doom (1984)",
+            "genres": "Action|Adventure|Fantasy",
+            "retrieval_rank": 23,
+            "distance": 0.7936302274465561
+          },
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.79389688372612
+          },
+          {
+            "movieId": 2455,
+            "title": "Fly, The (1986)",
+            "genres": "Drama|Horror|Sci-Fi|Thriller",
+            "retrieval_rank": 25,
+            "distance": 0.7944576442241669
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 71.7,
           "rerank_ms": 0.9
         },
         "usage": {
@@ -279,560 +833,6 @@
     },
     {
       "request": {
-        "user_id": 1,
-        "query": "feel-good comedy for a rainy day",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 4886,
-            "title": "Monsters, Inc. (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "rerank_score": 25.0,
-            "retrieval_rank": 6,
-            "distance": 0.777709037065506
-          },
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "rerank_score": 24.0,
-            "retrieval_rank": 7,
-            "distance": 0.7789281904697418
-          },
-          {
-            "movieId": 1,
-            "title": "Toy Story (1995)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "rerank_score": 23.0,
-            "retrieval_rank": 8,
-            "distance": 0.7819135934114456
-          },
-          {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "rerank_score": 22.0,
-            "retrieval_rank": 16,
-            "distance": 0.7891627103090286
-          },
-          {
-            "movieId": 1270,
-            "title": "Back to the Future (1985)",
-            "genres": "Adventure|Comedy|Sci-Fi",
-            "rerank_score": 21.0,
-            "retrieval_rank": 2,
-            "distance": 0.7709293067455292
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "rerank_score": 20.0,
-            "retrieval_rank": 21,
-            "distance": 0.7928571403026581
-          },
-          {
-            "movieId": 2987,
-            "title": "Who Framed Roger Rabbit? (1988)",
-            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
-            "rerank_score": 19.0,
-            "retrieval_rank": 18,
-            "distance": 0.792154923081398
-          },
-          {
-            "movieId": 1527,
-            "title": "Fifth Element, The (1997)",
-            "genres": "Action|Adventure|Comedy|Sci-Fi",
-            "rerank_score": 18.0,
-            "retrieval_rank": 9,
-            "distance": 0.7827619016170502
-          },
-          {
-            "movieId": 6659,
-            "title": "Tremors (1990)",
-            "genres": "Comedy|Horror|Sci-Fi",
-            "rerank_score": 17.0,
-            "retrieval_rank": 3,
-            "distance": 0.7728208005428314
-          },
-          {
-            "movieId": 2657,
-            "title": "Rocky Horror Picture Show, The (1975)",
-            "genres": "Comedy|Horror|Musical|Sci-Fi",
-            "rerank_score": 16.0,
-            "retrieval_rank": 11,
-            "distance": 0.7873123586177826
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 1210,
-            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
-            "genres": "Action|Adventure|Sci-Fi",
-            "retrieval_rank": 1,
-            "distance": 0.760751411318779
-          },
-          {
-            "movieId": 1270,
-            "title": "Back to the Future (1985)",
-            "genres": "Adventure|Comedy|Sci-Fi",
-            "retrieval_rank": 2,
-            "distance": 0.7709293067455292
-          },
-          {
-            "movieId": 6659,
-            "title": "Tremors (1990)",
-            "genres": "Comedy|Horror|Sci-Fi",
-            "retrieval_rank": 3,
-            "distance": 0.7728208005428314
-          },
-          {
-            "movieId": 480,
-            "title": "Jurassic Park (1993)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 4,
-            "distance": 0.7757308334112167
-          },
-          {
-            "movieId": 5349,
-            "title": "Spider-Man (2002)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 5,
-            "distance": 0.7772562652826309
-          },
-          {
-            "movieId": 4886,
-            "title": "Monsters, Inc. (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "retrieval_rank": 6,
-            "distance": 0.777709037065506
-          },
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 7,
-            "distance": 0.7789281904697418
-          },
-          {
-            "movieId": 1,
-            "title": "Toy Story (1995)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "retrieval_rank": 8,
-            "distance": 0.7819135934114456
-          },
-          {
-            "movieId": 1527,
-            "title": "Fifth Element, The (1997)",
-            "genres": "Action|Adventure|Comedy|Sci-Fi",
-            "retrieval_rank": 9,
-            "distance": 0.7827619016170502
-          },
-          {
-            "movieId": 3471,
-            "title": "Close Encounters of the Third Kind (1977)",
-            "genres": "Adventure|Drama|Sci-Fi",
-            "retrieval_rank": 10,
-            "distance": 0.7832397222518921
-          },
-          {
-            "movieId": 2657,
-            "title": "Rocky Horror Picture Show, The (1975)",
-            "genres": "Comedy|Horror|Musical|Sci-Fi",
-            "retrieval_rank": 11,
-            "distance": 0.7873123586177826
-          },
-          {
-            "movieId": 3793,
-            "title": "X-Men (2000)",
-            "genres": "Action|Adventure|Sci-Fi",
-            "retrieval_rank": 12,
-            "distance": 0.787398636341095
-          },
-          {
-            "movieId": 1274,
-            "title": "Akira (1988)",
-            "genres": "Action|Adventure|Animation|Sci-Fi",
-            "retrieval_rank": 13,
-            "distance": 0.7875173389911652
-          },
-          {
-            "movieId": 1206,
-            "title": "Clockwork Orange, A (1971)",
-            "genres": "Crime|Drama|Sci-Fi|Thriller",
-            "retrieval_rank": 14,
-            "distance": 0.7877006232738495
-          },
-          {
-            "movieId": 5618,
-            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
-            "genres": "Adventure|Animation|Fantasy",
-            "retrieval_rank": 15,
-            "distance": 0.7881932556629181
-          },
-          {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "retrieval_rank": 16,
-            "distance": 0.7891627103090286
-          },
-          {
-            "movieId": 3527,
-            "title": "Predator (1987)",
-            "genres": "Action|Sci-Fi|Thriller",
-            "retrieval_rank": 17,
-            "distance": 0.7907281368970871
-          },
-          {
-            "movieId": 2987,
-            "title": "Who Framed Roger Rabbit? (1988)",
-            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
-            "retrieval_rank": 18,
-            "distance": 0.792154923081398
-          },
-          {
-            "movieId": 551,
-            "title": "Nightmare Before Christmas, The (1993)",
-            "genres": "Animation|Children|Fantasy|Musical",
-            "retrieval_rank": 19,
-            "distance": 0.7925318777561188
-          },
-          {
-            "movieId": 6979,
-            "title": "WarGames (1983)",
-            "genres": "Drama|Sci-Fi|Thriller",
-            "retrieval_rank": 20,
-            "distance": 0.7928256392478943
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 21,
-            "distance": 0.7928571403026581
-          },
-          {
-            "movieId": 592,
-            "title": "Batman (1989)",
-            "genres": "Action|Crime|Thriller",
-            "retrieval_rank": 22,
-            "distance": 0.7929740101099014
-          },
-          {
-            "movieId": 2115,
-            "title": "Indiana Jones and the Temple of Doom (1984)",
-            "genres": "Action|Adventure|Fantasy",
-            "retrieval_rank": 23,
-            "distance": 0.7936302274465561
-          },
-          {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.79389688372612
-          },
-          {
-            "movieId": 2455,
-            "title": "Fly, The (1986)",
-            "genres": "Drama|Horror|Sci-Fi|Thriller",
-            "retrieval_rank": 25,
-            "distance": 0.7944576442241669
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 110.0,
-          "rerank_ms": 1.7
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 1,
-        "query": "dark crime drama with a great ending",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 1206,
-            "title": "Clockwork Orange, A (1971)",
-            "genres": "Crime|Drama|Sci-Fi|Thriller",
-            "rerank_score": 25.0,
-            "retrieval_rank": 14,
-            "distance": 0.7877006232738495
-          },
-          {
-            "movieId": 592,
-            "title": "Batman (1989)",
-            "genres": "Action|Crime|Thriller",
-            "rerank_score": 24.0,
-            "retrieval_rank": 22,
-            "distance": 0.7929740101099014
-          },
-          {
-            "movieId": 2987,
-            "title": "Who Framed Roger Rabbit? (1988)",
-            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
-            "rerank_score": 23.0,
-            "retrieval_rank": 18,
-            "distance": 0.792154923081398
-          },
-          {
-            "movieId": 2455,
-            "title": "Fly, The (1986)",
-            "genres": "Drama|Horror|Sci-Fi|Thriller",
-            "rerank_score": 22.0,
-            "retrieval_rank": 25,
-            "distance": 0.7944576442241669
-          },
-          {
-            "movieId": 6979,
-            "title": "WarGames (1983)",
-            "genres": "Drama|Sci-Fi|Thriller",
-            "rerank_score": 21.0,
-            "retrieval_rank": 20,
-            "distance": 0.7928256392478943
-          },
-          {
-            "movieId": 3471,
-            "title": "Close Encounters of the Third Kind (1977)",
-            "genres": "Adventure|Drama|Sci-Fi",
-            "rerank_score": 20.0,
-            "retrieval_rank": 10,
-            "distance": 0.7832397222518921
-          },
-          {
-            "movieId": 1210,
-            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
-            "genres": "Action|Adventure|Sci-Fi",
-            "rerank_score": 19.0,
-            "retrieval_rank": 1,
-            "distance": 0.760751411318779
-          },
-          {
-            "movieId": 5349,
-            "title": "Spider-Man (2002)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "rerank_score": 18.0,
-            "retrieval_rank": 5,
-            "distance": 0.7772562652826309
-          },
-          {
-            "movieId": 480,
-            "title": "Jurassic Park (1993)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "rerank_score": 17.0,
-            "retrieval_rank": 4,
-            "distance": 0.7757308334112167
-          },
-          {
-            "movieId": 1527,
-            "title": "Fifth Element, The (1997)",
-            "genres": "Action|Adventure|Comedy|Sci-Fi",
-            "rerank_score": 16.0,
-            "retrieval_rank": 9,
-            "distance": 0.7827619016170502
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 1210,
-            "title": "Star Wars: Episode VI - Return of the Jedi (1983)",
-            "genres": "Action|Adventure|Sci-Fi",
-            "retrieval_rank": 1,
-            "distance": 0.760751411318779
-          },
-          {
-            "movieId": 1270,
-            "title": "Back to the Future (1985)",
-            "genres": "Adventure|Comedy|Sci-Fi",
-            "retrieval_rank": 2,
-            "distance": 0.7709293067455292
-          },
-          {
-            "movieId": 6659,
-            "title": "Tremors (1990)",
-            "genres": "Comedy|Horror|Sci-Fi",
-            "retrieval_rank": 3,
-            "distance": 0.7728208005428314
-          },
-          {
-            "movieId": 480,
-            "title": "Jurassic Park (1993)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 4,
-            "distance": 0.7757308334112167
-          },
-          {
-            "movieId": 5349,
-            "title": "Spider-Man (2002)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 5,
-            "distance": 0.7772562652826309
-          },
-          {
-            "movieId": 4886,
-            "title": "Monsters, Inc. (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "retrieval_rank": 6,
-            "distance": 0.777709037065506
-          },
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 7,
-            "distance": 0.7789281904697418
-          },
-          {
-            "movieId": 1,
-            "title": "Toy Story (1995)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "retrieval_rank": 8,
-            "distance": 0.7819135934114456
-          },
-          {
-            "movieId": 1527,
-            "title": "Fifth Element, The (1997)",
-            "genres": "Action|Adventure|Comedy|Sci-Fi",
-            "retrieval_rank": 9,
-            "distance": 0.7827619016170502
-          },
-          {
-            "movieId": 3471,
-            "title": "Close Encounters of the Third Kind (1977)",
-            "genres": "Adventure|Drama|Sci-Fi",
-            "retrieval_rank": 10,
-            "distance": 0.7832397222518921
-          },
-          {
-            "movieId": 2657,
-            "title": "Rocky Horror Picture Show, The (1975)",
-            "genres": "Comedy|Horror|Musical|Sci-Fi",
-            "retrieval_rank": 11,
-            "distance": 0.7873123586177826
-          },
-          {
-            "movieId": 3793,
-            "title": "X-Men (2000)",
-            "genres": "Action|Adventure|Sci-Fi",
-            "retrieval_rank": 12,
-            "distance": 0.787398636341095
-          },
-          {
-            "movieId": 1274,
-            "title": "Akira (1988)",
-            "genres": "Action|Adventure|Animation|Sci-Fi",
-            "retrieval_rank": 13,
-            "distance": 0.7875173389911652
-          },
-          {
-            "movieId": 1206,
-            "title": "Clockwork Orange, A (1971)",
-            "genres": "Crime|Drama|Sci-Fi|Thriller",
-            "retrieval_rank": 14,
-            "distance": 0.7877006232738495
-          },
-          {
-            "movieId": 5618,
-            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
-            "genres": "Adventure|Animation|Fantasy",
-            "retrieval_rank": 15,
-            "distance": 0.7881932556629181
-          },
-          {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "retrieval_rank": 16,
-            "distance": 0.7891627103090286
-          },
-          {
-            "movieId": 3527,
-            "title": "Predator (1987)",
-            "genres": "Action|Sci-Fi|Thriller",
-            "retrieval_rank": 17,
-            "distance": 0.7907281368970871
-          },
-          {
-            "movieId": 2987,
-            "title": "Who Framed Roger Rabbit? (1988)",
-            "genres": "Adventure|Animation|Children|Comedy|Crime|Fantasy|Mystery",
-            "retrieval_rank": 18,
-            "distance": 0.792154923081398
-          },
-          {
-            "movieId": 551,
-            "title": "Nightmare Before Christmas, The (1993)",
-            "genres": "Animation|Children|Fantasy|Musical",
-            "retrieval_rank": 19,
-            "distance": 0.7925318777561188
-          },
-          {
-            "movieId": 6979,
-            "title": "WarGames (1983)",
-            "genres": "Drama|Sci-Fi|Thriller",
-            "retrieval_rank": 20,
-            "distance": 0.7928256392478943
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 21,
-            "distance": 0.7928571403026581
-          },
-          {
-            "movieId": 592,
-            "title": "Batman (1989)",
-            "genres": "Action|Crime|Thriller",
-            "retrieval_rank": 22,
-            "distance": 0.7929740101099014
-          },
-          {
-            "movieId": 2115,
-            "title": "Indiana Jones and the Temple of Doom (1984)",
-            "genres": "Action|Adventure|Fantasy",
-            "retrieval_rank": 23,
-            "distance": 0.7936302274465561
-          },
-          {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.79389688372612
-          },
-          {
-            "movieId": 2455,
-            "title": "Fly, The (1986)",
-            "genres": "Drama|Horror|Sci-Fi|Thriller",
-            "retrieval_rank": 25,
-            "distance": 0.7944576442241669
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 91.3,
-          "rerank_ms": 1.8
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
         "user_id": 42,
         "query": "a mind-bending sci-fi thriller",
         "top_k": 10
@@ -1098,7 +1098,838 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 64.7,
+          "hnsw_ms": 71.5,
+          "rerank_ms": 19.3
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 42,
+        "query": "feel-good comedy for a rainy day",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 1136,
+            "title": "Monty Python and the Holy Grail (1975)",
+            "genres": "Adventure|Comedy|Fantasy",
+            "rerank_score": 25.0,
+            "retrieval_rank": 12,
+            "distance": 0.7014930248260498
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "rerank_score": 24.0,
+            "retrieval_rank": 23,
+            "distance": 0.7228496372699738
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "rerank_score": 23.0,
+            "retrieval_rank": 18,
+            "distance": 0.7190095782279968
+          },
+          {
+            "movieId": 750,
+            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
+            "genres": "Comedy|War",
+            "rerank_score": 22.0,
+            "retrieval_rank": 9,
+            "distance": 0.6851802468299866
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 13,
+            "distance": 0.704680323600769
+          },
+          {
+            "movieId": 5618,
+            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
+            "genres": "Adventure|Animation|Fantasy",
+            "rerank_score": 20.0,
+            "retrieval_rank": 19,
+            "distance": 0.7201034128665924
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "rerank_score": 19.0,
+            "retrieval_rank": 2,
+            "distance": 0.6371259391307831
+          },
+          {
+            "movieId": 912,
+            "title": "Casablanca (1942)",
+            "genres": "Drama|Romance",
+            "rerank_score": 18.0,
+            "retrieval_rank": 8,
+            "distance": 0.6742851138114929
+          },
+          {
+            "movieId": 1213,
+            "title": "Goodfellas (1990)",
+            "genres": "Crime|Drama",
+            "rerank_score": 17.0,
+            "retrieval_rank": 11,
+            "distance": 0.6869113445281982
+          },
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "rerank_score": 16.0,
+            "retrieval_rank": 1,
+            "distance": 0.635944277048111
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 1,
+            "distance": 0.635944277048111
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 2,
+            "distance": 0.6371259391307831
+          },
+          {
+            "movieId": 50,
+            "title": "Usual Suspects, The (1995)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 3,
+            "distance": 0.642840564250946
+          },
+          {
+            "movieId": 1221,
+            "title": "Godfather: Part II, The (1974)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 4,
+            "distance": 0.6498607993125916
+          },
+          {
+            "movieId": 6016,
+            "title": "City of God (Cidade de Deus) (2002)",
+            "genres": "Action|Adventure|Crime|Drama|Thriller",
+            "retrieval_rank": 5,
+            "distance": 0.6616300344467163
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "retrieval_rank": 6,
+            "distance": 0.6630692183971405
+          },
+          {
+            "movieId": 2329,
+            "title": "American History X (1998)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 7,
+            "distance": 0.6698776483535767
+          },
+          {
+            "movieId": 912,
+            "title": "Casablanca (1942)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 8,
+            "distance": 0.6742851138114929
+          },
+          {
+            "movieId": 750,
+            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
+            "genres": "Comedy|War",
+            "retrieval_rank": 9,
+            "distance": 0.6851802468299866
+          },
+          {
+            "movieId": 7502,
+            "title": "Band of Brothers (2001)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 10,
+            "distance": 0.686811089515686
+          },
+          {
+            "movieId": 1213,
+            "title": "Goodfellas (1990)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 11,
+            "distance": 0.6869113445281982
+          },
+          {
+            "movieId": 1136,
+            "title": "Monty Python and the Holy Grail (1975)",
+            "genres": "Adventure|Comedy|Fantasy",
+            "retrieval_rank": 12,
+            "distance": 0.7014930248260498
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.704680323600769
+          },
+          {
+            "movieId": 1208,
+            "title": "Apocalypse Now (1979)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 14,
+            "distance": 0.7082712054252625
+          },
+          {
+            "movieId": 1252,
+            "title": "Chinatown (1974)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "retrieval_rank": 15,
+            "distance": 0.7109033167362213
+          },
+          {
+            "movieId": 1089,
+            "title": "Reservoir Dogs (1992)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 16,
+            "distance": 0.7109216451644897
+          },
+          {
+            "movieId": 48516,
+            "title": "Departed, The (2006)",
+            "genres": "Crime|Drama|Thriller",
+            "retrieval_rank": 17,
+            "distance": 0.7136198878288269
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 18,
+            "distance": 0.7190095782279968
+          },
+          {
+            "movieId": 5618,
+            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
+            "genres": "Adventure|Animation|Fantasy",
+            "retrieval_rank": 19,
+            "distance": 0.7201034128665924
+          },
+          {
+            "movieId": 110,
+            "title": "Braveheart (1995)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 20,
+            "distance": 0.7201114296913147
+          },
+          {
+            "movieId": 2762,
+            "title": "Sixth Sense, The (1999)",
+            "genres": "Drama|Horror|Mystery",
+            "retrieval_rank": 21,
+            "distance": 0.7221894860267639
+          },
+          {
+            "movieId": 1617,
+            "title": "L.A. Confidential (1997)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "retrieval_rank": 22,
+            "distance": 0.7224318385124207
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 23,
+            "distance": 0.7228496372699738
+          },
+          {
+            "movieId": 32,
+            "title": "Twelve Monkeys (a.k.a. 12 Monkeys) (1995)",
+            "genres": "Mystery|Sci-Fi|Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.725103497505188
+          },
+          {
+            "movieId": 1233,
+            "title": "Boot, Das (Boat, The) (1981)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 25,
+            "distance": 0.7255551815032959
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 53.9,
+          "rerank_ms": 0.8
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 42,
+        "query": "dark crime drama with a great ending",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 50,
+            "title": "Usual Suspects, The (1995)",
+            "genres": "Crime|Mystery|Thriller",
+            "rerank_score": 25.0,
+            "retrieval_rank": 3,
+            "distance": 0.642840564250946
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "rerank_score": 24.0,
+            "retrieval_rank": 2,
+            "distance": 0.6371259391307831
+          },
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "rerank_score": 23.0,
+            "retrieval_rank": 1,
+            "distance": 0.635944277048111
+          },
+          {
+            "movieId": 1221,
+            "title": "Godfather: Part II, The (1974)",
+            "genres": "Crime|Drama",
+            "rerank_score": 22.0,
+            "retrieval_rank": 4,
+            "distance": 0.6498607993125916
+          },
+          {
+            "movieId": 1617,
+            "title": "L.A. Confidential (1997)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 22,
+            "distance": 0.7224318385124207
+          },
+          {
+            "movieId": 1252,
+            "title": "Chinatown (1974)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "rerank_score": 20.0,
+            "retrieval_rank": 15,
+            "distance": 0.7109033167362213
+          },
+          {
+            "movieId": 6016,
+            "title": "City of God (Cidade de Deus) (2002)",
+            "genres": "Action|Adventure|Crime|Drama|Thriller",
+            "rerank_score": 19.0,
+            "retrieval_rank": 5,
+            "distance": 0.6616300344467163
+          },
+          {
+            "movieId": 48516,
+            "title": "Departed, The (2006)",
+            "genres": "Crime|Drama|Thriller",
+            "rerank_score": 18.0,
+            "retrieval_rank": 17,
+            "distance": 0.7136198878288269
+          },
+          {
+            "movieId": 1213,
+            "title": "Goodfellas (1990)",
+            "genres": "Crime|Drama",
+            "rerank_score": 17.0,
+            "retrieval_rank": 11,
+            "distance": 0.6869113445281982
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "rerank_score": 16.0,
+            "retrieval_rank": 13,
+            "distance": 0.704680323600769
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 1,
+            "distance": 0.635944277048111
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 2,
+            "distance": 0.6371259391307831
+          },
+          {
+            "movieId": 50,
+            "title": "Usual Suspects, The (1995)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 3,
+            "distance": 0.642840564250946
+          },
+          {
+            "movieId": 1221,
+            "title": "Godfather: Part II, The (1974)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 4,
+            "distance": 0.6498607993125916
+          },
+          {
+            "movieId": 6016,
+            "title": "City of God (Cidade de Deus) (2002)",
+            "genres": "Action|Adventure|Crime|Drama|Thriller",
+            "retrieval_rank": 5,
+            "distance": 0.6616300344467163
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "retrieval_rank": 6,
+            "distance": 0.6630692183971405
+          },
+          {
+            "movieId": 2329,
+            "title": "American History X (1998)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 7,
+            "distance": 0.6698776483535767
+          },
+          {
+            "movieId": 912,
+            "title": "Casablanca (1942)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 8,
+            "distance": 0.6742851138114929
+          },
+          {
+            "movieId": 750,
+            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
+            "genres": "Comedy|War",
+            "retrieval_rank": 9,
+            "distance": 0.6851802468299866
+          },
+          {
+            "movieId": 7502,
+            "title": "Band of Brothers (2001)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 10,
+            "distance": 0.686811089515686
+          },
+          {
+            "movieId": 1213,
+            "title": "Goodfellas (1990)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 11,
+            "distance": 0.6869113445281982
+          },
+          {
+            "movieId": 1136,
+            "title": "Monty Python and the Holy Grail (1975)",
+            "genres": "Adventure|Comedy|Fantasy",
+            "retrieval_rank": 12,
+            "distance": 0.7014930248260498
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.704680323600769
+          },
+          {
+            "movieId": 1208,
+            "title": "Apocalypse Now (1979)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 14,
+            "distance": 0.7082712054252625
+          },
+          {
+            "movieId": 1252,
+            "title": "Chinatown (1974)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "retrieval_rank": 15,
+            "distance": 0.7109033167362213
+          },
+          {
+            "movieId": 1089,
+            "title": "Reservoir Dogs (1992)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 16,
+            "distance": 0.7109216451644897
+          },
+          {
+            "movieId": 48516,
+            "title": "Departed, The (2006)",
+            "genres": "Crime|Drama|Thriller",
+            "retrieval_rank": 17,
+            "distance": 0.7136198878288269
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 18,
+            "distance": 0.7190095782279968
+          },
+          {
+            "movieId": 5618,
+            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
+            "genres": "Adventure|Animation|Fantasy",
+            "retrieval_rank": 19,
+            "distance": 0.7201034128665924
+          },
+          {
+            "movieId": 110,
+            "title": "Braveheart (1995)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 20,
+            "distance": 0.7201114296913147
+          },
+          {
+            "movieId": 2762,
+            "title": "Sixth Sense, The (1999)",
+            "genres": "Drama|Horror|Mystery",
+            "retrieval_rank": 21,
+            "distance": 0.7221894860267639
+          },
+          {
+            "movieId": 1617,
+            "title": "L.A. Confidential (1997)",
+            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "retrieval_rank": 22,
+            "distance": 0.7224318385124207
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 23,
+            "distance": 0.7228496372699738
+          },
+          {
+            "movieId": 32,
+            "title": "Twelve Monkeys (a.k.a. 12 Monkeys) (1995)",
+            "genres": "Mystery|Sci-Fi|Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.725103497505188
+          },
+          {
+            "movieId": 1233,
+            "title": "Boot, Das (Boat, The) (1981)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 25,
+            "distance": 0.7255551815032959
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 67.3,
+          "rerank_ms": 1.2
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 7,
+        "query": "a mind-bending sci-fi thriller",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "rerank_score": 25.0,
+            "retrieval_rank": 13,
+            "distance": 0.6989116668701172
+          },
+          {
+            "movieId": 3623,
+            "title": "Mission: Impossible II (2000)",
+            "genres": "Action|Adventure|Thriller",
+            "rerank_score": 24.0,
+            "retrieval_rank": 15,
+            "distance": 0.7021772861480713
+          },
+          {
+            "movieId": 2707,
+            "title": "Arlington Road (1999)",
+            "genres": "Thriller",
+            "rerank_score": 23.0,
+            "retrieval_rank": 24,
+            "distance": 0.72227743268013
+          },
+          {
+            "movieId": 2688,
+            "title": "General's Daughter, The (1999)",
+            "genres": "Crime|Drama|Mystery|Thriller",
+            "rerank_score": 22.0,
+            "retrieval_rank": 9,
+            "distance": 0.6819750070571899
+          },
+          {
+            "movieId": 2605,
+            "title": "Entrapment (1999)",
+            "genres": "Crime|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 10,
+            "distance": 0.6834427714347839
+          },
+          {
+            "movieId": 593,
+            "title": "Silence of the Lambs, The (1991)",
+            "genres": "Crime|Horror|Thriller",
+            "rerank_score": 20.0,
+            "retrieval_rank": 19,
+            "distance": 0.7101920545101166
+          },
+          {
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
+            "rerank_score": 19.0,
+            "retrieval_rank": 3,
+            "distance": 0.672575443983078
+          },
+          {
+            "movieId": 3101,
+            "title": "Fatal Attraction (1987)",
+            "genres": "Drama|Thriller",
+            "rerank_score": 18.0,
+            "retrieval_rank": 16,
+            "distance": 0.702755868434906
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "rerank_score": 17.0,
+            "retrieval_rank": 22,
+            "distance": 0.7136709988117218
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "rerank_score": 16.0,
+            "retrieval_rank": 25,
+            "distance": 0.7223495543003082
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 2355,
+            "title": "Bug's Life, A (1998)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 1,
+            "distance": 0.6494719386100769
+          },
+          {
+            "movieId": 3114,
+            "title": "Toy Story 2 (1999)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 2,
+            "distance": 0.6519792079925537
+          },
+          {
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
+            "retrieval_rank": 3,
+            "distance": 0.672575443983078
+          },
+          {
+            "movieId": 3155,
+            "title": "Anna and the King (1999)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 4,
+            "distance": 0.6768601536750793
+          },
+          {
+            "movieId": 1959,
+            "title": "Out of Africa (1985)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 5,
+            "distance": 0.6779201030731201
+          },
+          {
+            "movieId": 2394,
+            "title": "Prince of Egypt, The (1998)",
+            "genres": "Animation|Musical",
+            "retrieval_rank": 6,
+            "distance": 0.6801347732543945
+          },
+          {
+            "movieId": 4022,
+            "title": "Cast Away (2000)",
+            "genres": "Drama",
+            "retrieval_rank": 7,
+            "distance": 0.6806843280792236
+          },
+          {
+            "movieId": 2724,
+            "title": "Runaway Bride (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 8,
+            "distance": 0.6815093755722046
+          },
+          {
+            "movieId": 2688,
+            "title": "General's Daughter, The (1999)",
+            "genres": "Crime|Drama|Mystery|Thriller",
+            "retrieval_rank": 9,
+            "distance": 0.6819750070571899
+          },
+          {
+            "movieId": 2605,
+            "title": "Entrapment (1999)",
+            "genres": "Crime|Thriller",
+            "retrieval_rank": 10,
+            "distance": 0.6834427714347839
+          },
+          {
+            "movieId": 3157,
+            "title": "Stuart Little (1999)",
+            "genres": "Children|Comedy|Fantasy",
+            "retrieval_rank": 11,
+            "distance": 0.6878876686096191
+          },
+          {
+            "movieId": 2581,
+            "title": "Never Been Kissed (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 12,
+            "distance": 0.6975084543228149
+          },
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.6989116668701172
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "retrieval_rank": 14,
+            "distance": 0.7017695903778076
+          },
+          {
+            "movieId": 3623,
+            "title": "Mission: Impossible II (2000)",
+            "genres": "Action|Adventure|Thriller",
+            "retrieval_rank": 15,
+            "distance": 0.7021772861480713
+          },
+          {
+            "movieId": 3101,
+            "title": "Fatal Attraction (1987)",
+            "genres": "Drama|Thriller",
+            "retrieval_rank": 16,
+            "distance": 0.702755868434906
+          },
+          {
+            "movieId": 2433,
+            "title": "Civil Action, A (1998)",
+            "genres": "Drama",
+            "retrieval_rank": 17,
+            "distance": 0.7055570185184479
+          },
+          {
+            "movieId": 110,
+            "title": "Braveheart (1995)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 18,
+            "distance": 0.7062558531761169
+          },
+          {
+            "movieId": 593,
+            "title": "Silence of the Lambs, The (1991)",
+            "genres": "Crime|Horror|Thriller",
+            "retrieval_rank": 19,
+            "distance": 0.7101920545101166
+          },
+          {
+            "movieId": 1198,
+            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
+            "genres": "Action|Adventure",
+            "retrieval_rank": 20,
+            "distance": 0.7106324732303619
+          },
+          {
+            "movieId": 2369,
+            "title": "Desperately Seeking Susan (1985)",
+            "genres": "Comedy|Drama|Romance",
+            "retrieval_rank": 21,
+            "distance": 0.7134082913398743
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 22,
+            "distance": 0.7136709988117218
+          },
+          {
+            "movieId": 2690,
+            "title": "Ideal Husband, An (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 23,
+            "distance": 0.7169762253761292
+          },
+          {
+            "movieId": 2707,
+            "title": "Arlington Road (1999)",
+            "genres": "Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.72227743268013
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 25,
+            "distance": 0.7223495543003082
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 55.8,
           "rerank_ms": 1.0
         },
         "usage": {
@@ -1110,550 +1941,273 @@
     },
     {
       "request": {
-        "user_id": 42,
+        "user_id": 7,
         "query": "feel-good comedy for a rainy day",
         "top_k": 10
       },
       "response": {
         "recommendations": [
           {
-            "movieId": 1136,
-            "title": "Monty Python and the Holy Grail (1975)",
-            "genres": "Adventure|Comedy|Fantasy",
+            "movieId": 3114,
+            "title": "Toy Story 2 (1999)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
             "rerank_score": 25.0,
+            "retrieval_rank": 2,
+            "distance": 0.6519792079925537
+          },
+          {
+            "movieId": 2355,
+            "title": "Bug's Life, A (1998)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "rerank_score": 24.0,
+            "retrieval_rank": 1,
+            "distance": 0.6494719386100769
+          },
+          {
+            "movieId": 2724,
+            "title": "Runaway Bride (1999)",
+            "genres": "Comedy|Romance",
+            "rerank_score": 23.0,
+            "retrieval_rank": 8,
+            "distance": 0.6815093755722046
+          },
+          {
+            "movieId": 2581,
+            "title": "Never Been Kissed (1999)",
+            "genres": "Comedy|Romance",
+            "rerank_score": 22.0,
             "retrieval_rank": 12,
-            "distance": 0.7014930248260498
+            "distance": 0.6975084543228149
           },
           {
             "movieId": 1197,
             "title": "Princess Bride, The (1987)",
             "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "rerank_score": 24.0,
-            "retrieval_rank": 23,
-            "distance": 0.7228496372699738
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "rerank_score": 23.0,
-            "retrieval_rank": 18,
-            "distance": 0.7190095782279968
-          },
-          {
-            "movieId": 750,
-            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
-            "genres": "Comedy|War",
-            "rerank_score": 22.0,
-            "retrieval_rank": 9,
-            "distance": 0.6851802468299866
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
             "rerank_score": 21.0,
-            "retrieval_rank": 13,
-            "distance": 0.704680323600769
+            "retrieval_rank": 25,
+            "distance": 0.7223495543003082
           },
           {
-            "movieId": 5618,
-            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
-            "genres": "Adventure|Animation|Fantasy",
+            "movieId": 2369,
+            "title": "Desperately Seeking Susan (1985)",
+            "genres": "Comedy|Drama|Romance",
             "rerank_score": 20.0,
-            "retrieval_rank": 19,
-            "distance": 0.7201034128665924
+            "retrieval_rank": 21,
+            "distance": 0.7134082913398743
           },
           {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
+            "movieId": 2690,
+            "title": "Ideal Husband, An (1999)",
+            "genres": "Comedy|Romance",
             "rerank_score": 19.0,
-            "retrieval_rank": 2,
-            "distance": 0.6371259391307831
+            "retrieval_rank": 23,
+            "distance": 0.7169762253761292
           },
           {
-            "movieId": 912,
-            "title": "Casablanca (1942)",
-            "genres": "Drama|Romance",
+            "movieId": 3157,
+            "title": "Stuart Little (1999)",
+            "genres": "Children|Comedy|Fantasy",
             "rerank_score": 18.0,
-            "retrieval_rank": 8,
-            "distance": 0.6742851138114929
-          },
-          {
-            "movieId": 1213,
-            "title": "Goodfellas (1990)",
-            "genres": "Crime|Drama",
-            "rerank_score": 17.0,
             "retrieval_rank": 11,
-            "distance": 0.6869113445281982
+            "distance": 0.6878876686096191
           },
           {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
+            "movieId": 2394,
+            "title": "Prince of Egypt, The (1998)",
+            "genres": "Animation|Musical",
+            "rerank_score": 17.0,
+            "retrieval_rank": 6,
+            "distance": 0.6801347732543945
+          },
+          {
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
             "rerank_score": 16.0,
-            "retrieval_rank": 1,
-            "distance": 0.635944277048111
+            "retrieval_rank": 3,
+            "distance": 0.672575443983078
           }
         ],
         "candidates": [
           {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
+            "movieId": 2355,
+            "title": "Bug's Life, A (1998)",
+            "genres": "Adventure|Animation|Children|Comedy",
             "retrieval_rank": 1,
-            "distance": 0.635944277048111
+            "distance": 0.6494719386100769
           },
           {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
+            "movieId": 3114,
+            "title": "Toy Story 2 (1999)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
             "retrieval_rank": 2,
-            "distance": 0.6371259391307831
+            "distance": 0.6519792079925537
           },
           {
-            "movieId": 50,
-            "title": "Usual Suspects, The (1995)",
-            "genres": "Crime|Mystery|Thriller",
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
             "retrieval_rank": 3,
-            "distance": 0.642840564250946
+            "distance": 0.672575443983078
           },
           {
-            "movieId": 1221,
-            "title": "Godfather: Part II, The (1974)",
-            "genres": "Crime|Drama",
+            "movieId": 3155,
+            "title": "Anna and the King (1999)",
+            "genres": "Drama|Romance",
             "retrieval_rank": 4,
-            "distance": 0.6498607993125916
+            "distance": 0.6768601536750793
           },
           {
-            "movieId": 6016,
-            "title": "City of God (Cidade de Deus) (2002)",
-            "genres": "Action|Adventure|Crime|Drama|Thriller",
+            "movieId": 1959,
+            "title": "Out of Africa (1985)",
+            "genres": "Drama|Romance",
             "retrieval_rank": 5,
-            "distance": 0.6616300344467163
+            "distance": 0.6779201030731201
+          },
+          {
+            "movieId": 2394,
+            "title": "Prince of Egypt, The (1998)",
+            "genres": "Animation|Musical",
+            "retrieval_rank": 6,
+            "distance": 0.6801347732543945
+          },
+          {
+            "movieId": 4022,
+            "title": "Cast Away (2000)",
+            "genres": "Drama",
+            "retrieval_rank": 7,
+            "distance": 0.6806843280792236
+          },
+          {
+            "movieId": 2724,
+            "title": "Runaway Bride (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 8,
+            "distance": 0.6815093755722046
+          },
+          {
+            "movieId": 2688,
+            "title": "General's Daughter, The (1999)",
+            "genres": "Crime|Drama|Mystery|Thriller",
+            "retrieval_rank": 9,
+            "distance": 0.6819750070571899
+          },
+          {
+            "movieId": 2605,
+            "title": "Entrapment (1999)",
+            "genres": "Crime|Thriller",
+            "retrieval_rank": 10,
+            "distance": 0.6834427714347839
+          },
+          {
+            "movieId": 3157,
+            "title": "Stuart Little (1999)",
+            "genres": "Children|Comedy|Fantasy",
+            "retrieval_rank": 11,
+            "distance": 0.6878876686096191
+          },
+          {
+            "movieId": 2581,
+            "title": "Never Been Kissed (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 12,
+            "distance": 0.6975084543228149
+          },
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.6989116668701172
           },
           {
             "movieId": 527,
             "title": "Schindler's List (1993)",
             "genres": "Drama|War",
-            "retrieval_rank": 6,
-            "distance": 0.6630692183971405
-          },
-          {
-            "movieId": 2329,
-            "title": "American History X (1998)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 7,
-            "distance": 0.6698776483535767
-          },
-          {
-            "movieId": 912,
-            "title": "Casablanca (1942)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 8,
-            "distance": 0.6742851138114929
-          },
-          {
-            "movieId": 750,
-            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
-            "genres": "Comedy|War",
-            "retrieval_rank": 9,
-            "distance": 0.6851802468299866
-          },
-          {
-            "movieId": 7502,
-            "title": "Band of Brothers (2001)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 10,
-            "distance": 0.686811089515686
-          },
-          {
-            "movieId": 1213,
-            "title": "Goodfellas (1990)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 11,
-            "distance": 0.6869113445281982
-          },
-          {
-            "movieId": 1136,
-            "title": "Monty Python and the Holy Grail (1975)",
-            "genres": "Adventure|Comedy|Fantasy",
-            "retrieval_rank": 12,
-            "distance": 0.7014930248260498
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.704680323600769
-          },
-          {
-            "movieId": 1208,
-            "title": "Apocalypse Now (1979)",
-            "genres": "Action|Drama|War",
             "retrieval_rank": 14,
-            "distance": 0.7082712054252625
+            "distance": 0.7017695903778076
           },
           {
-            "movieId": 1252,
-            "title": "Chinatown (1974)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "movieId": 3623,
+            "title": "Mission: Impossible II (2000)",
+            "genres": "Action|Adventure|Thriller",
             "retrieval_rank": 15,
-            "distance": 0.7109033167362213
+            "distance": 0.7021772861480713
           },
           {
-            "movieId": 1089,
-            "title": "Reservoir Dogs (1992)",
-            "genres": "Crime|Mystery|Thriller",
+            "movieId": 3101,
+            "title": "Fatal Attraction (1987)",
+            "genres": "Drama|Thriller",
             "retrieval_rank": 16,
-            "distance": 0.7109216451644897
+            "distance": 0.702755868434906
           },
           {
-            "movieId": 48516,
-            "title": "Departed, The (2006)",
-            "genres": "Crime|Drama|Thriller",
+            "movieId": 2433,
+            "title": "Civil Action, A (1998)",
+            "genres": "Drama",
             "retrieval_rank": 17,
-            "distance": 0.7136198878288269
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 18,
-            "distance": 0.7190095782279968
-          },
-          {
-            "movieId": 5618,
-            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
-            "genres": "Adventure|Animation|Fantasy",
-            "retrieval_rank": 19,
-            "distance": 0.7201034128665924
+            "distance": 0.7055570185184479
           },
           {
             "movieId": 110,
             "title": "Braveheart (1995)",
             "genres": "Action|Drama|War",
-            "retrieval_rank": 20,
-            "distance": 0.7201114296913147
-          },
-          {
-            "movieId": 2762,
-            "title": "Sixth Sense, The (1999)",
-            "genres": "Drama|Horror|Mystery",
-            "retrieval_rank": 21,
-            "distance": 0.7221894860267639
-          },
-          {
-            "movieId": 1617,
-            "title": "L.A. Confidential (1997)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
-            "retrieval_rank": 22,
-            "distance": 0.7224318385124207
-          },
-          {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "retrieval_rank": 23,
-            "distance": 0.7228496372699738
-          },
-          {
-            "movieId": 32,
-            "title": "Twelve Monkeys (a.k.a. 12 Monkeys) (1995)",
-            "genres": "Mystery|Sci-Fi|Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.725103497505188
-          },
-          {
-            "movieId": 1233,
-            "title": "Boot, Das (Boat, The) (1981)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 25,
-            "distance": 0.7255551815032959
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 70.7,
-          "rerank_ms": 1.6
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 42,
-        "query": "dark crime drama with a great ending",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 50,
-            "title": "Usual Suspects, The (1995)",
-            "genres": "Crime|Mystery|Thriller",
-            "rerank_score": 25.0,
-            "retrieval_rank": 3,
-            "distance": 0.642840564250946
-          },
-          {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
-            "rerank_score": 24.0,
-            "retrieval_rank": 2,
-            "distance": 0.6371259391307831
-          },
-          {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
-            "rerank_score": 23.0,
-            "retrieval_rank": 1,
-            "distance": 0.635944277048111
-          },
-          {
-            "movieId": 1221,
-            "title": "Godfather: Part II, The (1974)",
-            "genres": "Crime|Drama",
-            "rerank_score": 22.0,
-            "retrieval_rank": 4,
-            "distance": 0.6498607993125916
-          },
-          {
-            "movieId": 1617,
-            "title": "L.A. Confidential (1997)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
-            "rerank_score": 21.0,
-            "retrieval_rank": 22,
-            "distance": 0.7224318385124207
-          },
-          {
-            "movieId": 1252,
-            "title": "Chinatown (1974)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
-            "rerank_score": 20.0,
-            "retrieval_rank": 15,
-            "distance": 0.7109033167362213
-          },
-          {
-            "movieId": 6016,
-            "title": "City of God (Cidade de Deus) (2002)",
-            "genres": "Action|Adventure|Crime|Drama|Thriller",
-            "rerank_score": 19.0,
-            "retrieval_rank": 5,
-            "distance": 0.6616300344467163
-          },
-          {
-            "movieId": 48516,
-            "title": "Departed, The (2006)",
-            "genres": "Crime|Drama|Thriller",
-            "rerank_score": 18.0,
-            "retrieval_rank": 17,
-            "distance": 0.7136198878288269
-          },
-          {
-            "movieId": 1213,
-            "title": "Goodfellas (1990)",
-            "genres": "Crime|Drama",
-            "rerank_score": 17.0,
-            "retrieval_rank": 11,
-            "distance": 0.6869113445281982
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "rerank_score": 16.0,
-            "retrieval_rank": 13,
-            "distance": 0.704680323600769
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 1,
-            "distance": 0.635944277048111
-          },
-          {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 2,
-            "distance": 0.6371259391307831
-          },
-          {
-            "movieId": 50,
-            "title": "Usual Suspects, The (1995)",
-            "genres": "Crime|Mystery|Thriller",
-            "retrieval_rank": 3,
-            "distance": 0.642840564250946
-          },
-          {
-            "movieId": 1221,
-            "title": "Godfather: Part II, The (1974)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 4,
-            "distance": 0.6498607993125916
-          },
-          {
-            "movieId": 6016,
-            "title": "City of God (Cidade de Deus) (2002)",
-            "genres": "Action|Adventure|Crime|Drama|Thriller",
-            "retrieval_rank": 5,
-            "distance": 0.6616300344467163
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "retrieval_rank": 6,
-            "distance": 0.6630692183971405
-          },
-          {
-            "movieId": 2329,
-            "title": "American History X (1998)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 7,
-            "distance": 0.6698776483535767
-          },
-          {
-            "movieId": 912,
-            "title": "Casablanca (1942)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 8,
-            "distance": 0.6742851138114929
-          },
-          {
-            "movieId": 750,
-            "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)",
-            "genres": "Comedy|War",
-            "retrieval_rank": 9,
-            "distance": 0.6851802468299866
-          },
-          {
-            "movieId": 7502,
-            "title": "Band of Brothers (2001)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 10,
-            "distance": 0.686811089515686
-          },
-          {
-            "movieId": 1213,
-            "title": "Goodfellas (1990)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 11,
-            "distance": 0.6869113445281982
-          },
-          {
-            "movieId": 1136,
-            "title": "Monty Python and the Holy Grail (1975)",
-            "genres": "Adventure|Comedy|Fantasy",
-            "retrieval_rank": 12,
-            "distance": 0.7014930248260498
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.704680323600769
-          },
-          {
-            "movieId": 1208,
-            "title": "Apocalypse Now (1979)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 14,
-            "distance": 0.7082712054252625
-          },
-          {
-            "movieId": 1252,
-            "title": "Chinatown (1974)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
-            "retrieval_rank": 15,
-            "distance": 0.7109033167362213
-          },
-          {
-            "movieId": 1089,
-            "title": "Reservoir Dogs (1992)",
-            "genres": "Crime|Mystery|Thriller",
-            "retrieval_rank": 16,
-            "distance": 0.7109216451644897
-          },
-          {
-            "movieId": 48516,
-            "title": "Departed, The (2006)",
-            "genres": "Crime|Drama|Thriller",
-            "retrieval_rank": 17,
-            "distance": 0.7136198878288269
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
             "retrieval_rank": 18,
-            "distance": 0.7190095782279968
+            "distance": 0.7062558531761169
           },
           {
-            "movieId": 5618,
-            "title": "Spirited Away (Sen to Chihiro no kamikakushi) (2001)",
-            "genres": "Adventure|Animation|Fantasy",
+            "movieId": 593,
+            "title": "Silence of the Lambs, The (1991)",
+            "genres": "Crime|Horror|Thriller",
             "retrieval_rank": 19,
-            "distance": 0.7201034128665924
+            "distance": 0.7101920545101166
           },
           {
-            "movieId": 110,
-            "title": "Braveheart (1995)",
-            "genres": "Action|Drama|War",
+            "movieId": 1198,
+            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
+            "genres": "Action|Adventure",
             "retrieval_rank": 20,
-            "distance": 0.7201114296913147
+            "distance": 0.7106324732303619
           },
           {
-            "movieId": 2762,
-            "title": "Sixth Sense, The (1999)",
-            "genres": "Drama|Horror|Mystery",
+            "movieId": 2369,
+            "title": "Desperately Seeking Susan (1985)",
+            "genres": "Comedy|Drama|Romance",
             "retrieval_rank": 21,
-            "distance": 0.7221894860267639
+            "distance": 0.7134082913398743
           },
           {
-            "movieId": 1617,
-            "title": "L.A. Confidential (1997)",
-            "genres": "Crime|Film-Noir|Mystery|Thriller",
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
             "retrieval_rank": 22,
-            "distance": 0.7224318385124207
+            "distance": 0.7136709988117218
+          },
+          {
+            "movieId": 2690,
+            "title": "Ideal Husband, An (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 23,
+            "distance": 0.7169762253761292
+          },
+          {
+            "movieId": 2707,
+            "title": "Arlington Road (1999)",
+            "genres": "Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.72227743268013
           },
           {
             "movieId": 1197,
             "title": "Princess Bride, The (1987)",
             "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "retrieval_rank": 23,
-            "distance": 0.7228496372699738
-          },
-          {
-            "movieId": 32,
-            "title": "Twelve Monkeys (a.k.a. 12 Monkeys) (1995)",
-            "genres": "Mystery|Sci-Fi|Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.725103497505188
-          },
-          {
-            "movieId": 1233,
-            "title": "Boot, Das (Boat, The) (1981)",
-            "genres": "Action|Drama|War",
             "retrieval_rank": 25,
-            "distance": 0.7255551815032959
+            "distance": 0.7223495543003082
           }
         ],
         "timing": {
-          "hnsw_ms": 77.8,
-          "rerank_ms": 1.7
+          "hnsw_ms": 71.6,
+          "rerank_ms": 1.1
         },
         "usage": {
           "prompt_tokens": 0,
@@ -1665,272 +2219,549 @@
     {
       "request": {
         "user_id": 7,
+        "query": "dark crime drama with a great ending",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "rerank_score": 25.0,
+            "retrieval_rank": 22,
+            "distance": 0.7136709988117218
+          },
+          {
+            "movieId": 2688,
+            "title": "General's Daughter, The (1999)",
+            "genres": "Crime|Drama|Mystery|Thriller",
+            "rerank_score": 24.0,
+            "retrieval_rank": 9,
+            "distance": 0.6819750070571899
+          },
+          {
+            "movieId": 593,
+            "title": "Silence of the Lambs, The (1991)",
+            "genres": "Crime|Horror|Thriller",
+            "rerank_score": 23.0,
+            "retrieval_rank": 19,
+            "distance": 0.7101920545101166
+          },
+          {
+            "movieId": 2605,
+            "title": "Entrapment (1999)",
+            "genres": "Crime|Thriller",
+            "rerank_score": 22.0,
+            "retrieval_rank": 10,
+            "distance": 0.6834427714347839
+          },
+          {
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
+            "rerank_score": 21.0,
+            "retrieval_rank": 3,
+            "distance": 0.672575443983078
+          },
+          {
+            "movieId": 3101,
+            "title": "Fatal Attraction (1987)",
+            "genres": "Drama|Thriller",
+            "rerank_score": 20.0,
+            "retrieval_rank": 16,
+            "distance": 0.702755868434906
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "rerank_score": 19.0,
+            "retrieval_rank": 14,
+            "distance": 0.7017695903778076
+          },
+          {
+            "movieId": 110,
+            "title": "Braveheart (1995)",
+            "genres": "Action|Drama|War",
+            "rerank_score": 18.0,
+            "retrieval_rank": 18,
+            "distance": 0.7062558531761169
+          },
+          {
+            "movieId": 4022,
+            "title": "Cast Away (2000)",
+            "genres": "Drama",
+            "rerank_score": 17.0,
+            "retrieval_rank": 7,
+            "distance": 0.6806843280792236
+          },
+          {
+            "movieId": 1959,
+            "title": "Out of Africa (1985)",
+            "genres": "Drama|Romance",
+            "rerank_score": 16.0,
+            "retrieval_rank": 5,
+            "distance": 0.6779201030731201
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 2355,
+            "title": "Bug's Life, A (1998)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 1,
+            "distance": 0.6494719386100769
+          },
+          {
+            "movieId": 3114,
+            "title": "Toy Story 2 (1999)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "retrieval_rank": 2,
+            "distance": 0.6519792079925537
+          },
+          {
+            "movieId": 2763,
+            "title": "Thomas Crown Affair, The (1999)",
+            "genres": "Action|Mystery",
+            "retrieval_rank": 3,
+            "distance": 0.672575443983078
+          },
+          {
+            "movieId": 3155,
+            "title": "Anna and the King (1999)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 4,
+            "distance": 0.6768601536750793
+          },
+          {
+            "movieId": 1959,
+            "title": "Out of Africa (1985)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 5,
+            "distance": 0.6779201030731201
+          },
+          {
+            "movieId": 2394,
+            "title": "Prince of Egypt, The (1998)",
+            "genres": "Animation|Musical",
+            "retrieval_rank": 6,
+            "distance": 0.6801347732543945
+          },
+          {
+            "movieId": 4022,
+            "title": "Cast Away (2000)",
+            "genres": "Drama",
+            "retrieval_rank": 7,
+            "distance": 0.6806843280792236
+          },
+          {
+            "movieId": 2724,
+            "title": "Runaway Bride (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 8,
+            "distance": 0.6815093755722046
+          },
+          {
+            "movieId": 2688,
+            "title": "General's Daughter, The (1999)",
+            "genres": "Crime|Drama|Mystery|Thriller",
+            "retrieval_rank": 9,
+            "distance": 0.6819750070571899
+          },
+          {
+            "movieId": 2605,
+            "title": "Entrapment (1999)",
+            "genres": "Crime|Thriller",
+            "retrieval_rank": 10,
+            "distance": 0.6834427714347839
+          },
+          {
+            "movieId": 3157,
+            "title": "Stuart Little (1999)",
+            "genres": "Children|Comedy|Fantasy",
+            "retrieval_rank": 11,
+            "distance": 0.6878876686096191
+          },
+          {
+            "movieId": 2581,
+            "title": "Never Been Kissed (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 12,
+            "distance": 0.6975084543228149
+          },
+          {
+            "movieId": 1127,
+            "title": "Abyss, The (1989)",
+            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.6989116668701172
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "retrieval_rank": 14,
+            "distance": 0.7017695903778076
+          },
+          {
+            "movieId": 3623,
+            "title": "Mission: Impossible II (2000)",
+            "genres": "Action|Adventure|Thriller",
+            "retrieval_rank": 15,
+            "distance": 0.7021772861480713
+          },
+          {
+            "movieId": 3101,
+            "title": "Fatal Attraction (1987)",
+            "genres": "Drama|Thriller",
+            "retrieval_rank": 16,
+            "distance": 0.702755868434906
+          },
+          {
+            "movieId": 2433,
+            "title": "Civil Action, A (1998)",
+            "genres": "Drama",
+            "retrieval_rank": 17,
+            "distance": 0.7055570185184479
+          },
+          {
+            "movieId": 110,
+            "title": "Braveheart (1995)",
+            "genres": "Action|Drama|War",
+            "retrieval_rank": 18,
+            "distance": 0.7062558531761169
+          },
+          {
+            "movieId": 593,
+            "title": "Silence of the Lambs, The (1991)",
+            "genres": "Crime|Horror|Thriller",
+            "retrieval_rank": 19,
+            "distance": 0.7101920545101166
+          },
+          {
+            "movieId": 1198,
+            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
+            "genres": "Action|Adventure",
+            "retrieval_rank": 20,
+            "distance": 0.7106324732303619
+          },
+          {
+            "movieId": 2369,
+            "title": "Desperately Seeking Susan (1985)",
+            "genres": "Comedy|Drama|Romance",
+            "retrieval_rank": 21,
+            "distance": 0.7134082913398743
+          },
+          {
+            "movieId": 318,
+            "title": "Shawshank Redemption, The (1994)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 22,
+            "distance": 0.7136709988117218
+          },
+          {
+            "movieId": 2690,
+            "title": "Ideal Husband, An (1999)",
+            "genres": "Comedy|Romance",
+            "retrieval_rank": 23,
+            "distance": 0.7169762253761292
+          },
+          {
+            "movieId": 2707,
+            "title": "Arlington Road (1999)",
+            "genres": "Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.72227743268013
+          },
+          {
+            "movieId": 1197,
+            "title": "Princess Bride, The (1987)",
+            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "retrieval_rank": 25,
+            "distance": 0.7223495543003082
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 63.6,
+          "rerank_ms": 0.9
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 33844,
         "query": "a mind-bending sci-fi thriller",
         "top_k": 10
       },
       "response": {
         "recommendations": [
           {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
+            "movieId": 2997,
+            "title": "Being John Malkovich (1999)",
+            "genres": "Comedy|Drama|Fantasy",
             "rerank_score": 25.0,
-            "retrieval_rank": 13,
-            "distance": 0.6989116668701172
-          },
-          {
-            "movieId": 3623,
-            "title": "Mission: Impossible II (2000)",
-            "genres": "Action|Adventure|Thriller",
-            "rerank_score": 24.0,
-            "retrieval_rank": 15,
-            "distance": 0.7021772861480713
-          },
-          {
-            "movieId": 2707,
-            "title": "Arlington Road (1999)",
-            "genres": "Thriller",
-            "rerank_score": 23.0,
-            "retrieval_rank": 24,
-            "distance": 0.72227743268013
-          },
-          {
-            "movieId": 2688,
-            "title": "General's Daughter, The (1999)",
-            "genres": "Crime|Drama|Mystery|Thriller",
-            "rerank_score": 22.0,
-            "retrieval_rank": 9,
-            "distance": 0.6819750070571899
-          },
-          {
-            "movieId": 2605,
-            "title": "Entrapment (1999)",
-            "genres": "Crime|Thriller",
-            "rerank_score": 21.0,
-            "retrieval_rank": 10,
-            "distance": 0.6834427714347839
-          },
-          {
-            "movieId": 593,
-            "title": "Silence of the Lambs, The (1991)",
-            "genres": "Crime|Horror|Thriller",
-            "rerank_score": 20.0,
             "retrieval_rank": 19,
-            "distance": 0.7101920545101166
+            "distance": 0.63294517993927
           },
           {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
+            "movieId": 32587,
+            "title": "Sin City (2005)",
+            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
+            "rerank_score": 24.0,
+            "retrieval_rank": 21,
+            "distance": 0.63963583111763
+          },
+          {
+            "movieId": 1089,
+            "title": "Reservoir Dogs (1992)",
+            "genres": "Crime|Mystery|Thriller",
+            "rerank_score": 23.0,
+            "retrieval_rank": 8,
+            "distance": 0.6154246926307678
+          },
+          {
+            "movieId": 6874,
+            "title": "Kill Bill: Vol. 1 (2003)",
+            "genres": "Action|Crime|Thriller",
+            "rerank_score": 22.0,
+            "retrieval_rank": 4,
+            "distance": 0.6009483337402344
+          },
+          {
+            "movieId": 7438,
+            "title": "Kill Bill: Vol. 2 (2004)",
+            "genres": "Action|Drama|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 6,
+            "distance": 0.6118839979171753
+          },
+          {
+            "movieId": 2692,
+            "title": "Run Lola Run (Lola rennt) (1998)",
+            "genres": "Action|Crime",
+            "rerank_score": 20.0,
+            "retrieval_rank": 10,
+            "distance": 0.6216762363910675
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
             "rerank_score": 19.0,
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
+            "retrieval_rank": 11,
+            "distance": 0.6223281621932983
           },
           {
-            "movieId": 3101,
-            "title": "Fatal Attraction (1987)",
-            "genres": "Drama|Thriller",
+            "movieId": 4034,
+            "title": "Traffic (2000)",
+            "genres": "Crime|Drama|Thriller",
             "rerank_score": 18.0,
-            "retrieval_rank": 16,
-            "distance": 0.702755868434906
+            "retrieval_rank": 7,
+            "distance": 0.6142849028110504
           },
           {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
+            "movieId": 2542,
+            "title": "Lock, Stock & Two Smoking Barrels (1998)",
+            "genres": "Comedy|Crime|Thriller",
             "rerank_score": 17.0,
-            "retrieval_rank": 22,
-            "distance": 0.7136709988117218
+            "retrieval_rank": 13,
+            "distance": 0.6270284056663513
           },
           {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "movieId": 6870,
+            "title": "Mystic River (2003)",
+            "genres": "Crime|Drama|Mystery",
             "rerank_score": 16.0,
-            "retrieval_rank": 25,
-            "distance": 0.7223495543003082
+            "retrieval_rank": 12,
+            "distance": 0.6246588230133057
           }
         ],
         "candidates": [
           {
-            "movieId": 2355,
-            "title": "Bug's Life, A (1998)",
-            "genres": "Adventure|Animation|Children|Comedy",
+            "movieId": 7153,
+            "title": "Lord of the Rings: The Return of the King, The (2003)",
+            "genres": "Action|Adventure|Drama|Fantasy",
             "retrieval_rank": 1,
-            "distance": 0.6494719386100769
+            "distance": 0.5794929563999176
           },
           {
-            "movieId": 3114,
-            "title": "Toy Story 2 (1999)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "movieId": 5952,
+            "title": "Lord of the Rings: The Two Towers, The (2002)",
+            "genres": "Adventure|Fantasy",
             "retrieval_rank": 2,
-            "distance": 0.6519792079925537
-          },
-          {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
-          },
-          {
-            "movieId": 3155,
-            "title": "Anna and the King (1999)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 4,
-            "distance": 0.6768601536750793
-          },
-          {
-            "movieId": 1959,
-            "title": "Out of Africa (1985)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 5,
-            "distance": 0.6779201030731201
-          },
-          {
-            "movieId": 2394,
-            "title": "Prince of Egypt, The (1998)",
-            "genres": "Animation|Musical",
-            "retrieval_rank": 6,
-            "distance": 0.6801347732543945
-          },
-          {
-            "movieId": 4022,
-            "title": "Cast Away (2000)",
-            "genres": "Drama",
-            "retrieval_rank": 7,
-            "distance": 0.6806843280792236
-          },
-          {
-            "movieId": 2724,
-            "title": "Runaway Bride (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 8,
-            "distance": 0.6815093755722046
-          },
-          {
-            "movieId": 2688,
-            "title": "General's Daughter, The (1999)",
-            "genres": "Crime|Drama|Mystery|Thriller",
-            "retrieval_rank": 9,
-            "distance": 0.6819750070571899
-          },
-          {
-            "movieId": 2605,
-            "title": "Entrapment (1999)",
-            "genres": "Crime|Thriller",
-            "retrieval_rank": 10,
-            "distance": 0.6834427714347839
-          },
-          {
-            "movieId": 3157,
-            "title": "Stuart Little (1999)",
-            "genres": "Children|Comedy|Fantasy",
-            "retrieval_rank": 11,
-            "distance": 0.6878876686096191
-          },
-          {
-            "movieId": 2581,
-            "title": "Never Been Kissed (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 12,
-            "distance": 0.6975084543228149
-          },
-          {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.6989116668701172
+            "distance": 0.59232297539711
           },
           {
             "movieId": 527,
             "title": "Schindler's List (1993)",
             "genres": "Drama|War",
-            "retrieval_rank": 14,
-            "distance": 0.7017695903778076
+            "retrieval_rank": 3,
+            "distance": 0.6003251075744629
           },
           {
-            "movieId": 3623,
-            "title": "Mission: Impossible II (2000)",
-            "genres": "Action|Adventure|Thriller",
-            "retrieval_rank": 15,
-            "distance": 0.7021772861480713
+            "movieId": 6874,
+            "title": "Kill Bill: Vol. 1 (2003)",
+            "genres": "Action|Crime|Thriller",
+            "retrieval_rank": 4,
+            "distance": 0.6009483337402344
           },
           {
-            "movieId": 3101,
-            "title": "Fatal Attraction (1987)",
-            "genres": "Drama|Thriller",
-            "retrieval_rank": 16,
-            "distance": 0.702755868434906
+            "movieId": 30749,
+            "title": "Hotel Rwanda (2004)",
+            "genres": "Drama|War",
+            "retrieval_rank": 5,
+            "distance": 0.6051924824714661
           },
           {
-            "movieId": 2433,
-            "title": "Civil Action, A (1998)",
+            "movieId": 7438,
+            "title": "Kill Bill: Vol. 2 (2004)",
+            "genres": "Action|Drama|Thriller",
+            "retrieval_rank": 6,
+            "distance": 0.6118839979171753
+          },
+          {
+            "movieId": 4034,
+            "title": "Traffic (2000)",
+            "genres": "Crime|Drama|Thriller",
+            "retrieval_rank": 7,
+            "distance": 0.6142849028110504
+          },
+          {
+            "movieId": 1089,
+            "title": "Reservoir Dogs (1992)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 8,
+            "distance": 0.6154246926307678
+          },
+          {
+            "movieId": 1221,
+            "title": "Godfather: Part II, The (1974)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 9,
+            "distance": 0.6205251514911652
+          },
+          {
+            "movieId": 2692,
+            "title": "Run Lola Run (Lola rennt) (1998)",
+            "genres": "Action|Crime",
+            "retrieval_rank": 10,
+            "distance": 0.6216762363910675
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "retrieval_rank": 11,
+            "distance": 0.6223281621932983
+          },
+          {
+            "movieId": 6870,
+            "title": "Mystic River (2003)",
+            "genres": "Crime|Drama|Mystery",
+            "retrieval_rank": 12,
+            "distance": 0.6246588230133057
+          },
+          {
+            "movieId": 2542,
+            "title": "Lock, Stock & Two Smoking Barrels (1998)",
+            "genres": "Comedy|Crime|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.6270284056663513
+          },
+          {
+            "movieId": 1358,
+            "title": "Sling Blade (1996)",
             "genres": "Drama",
+            "retrieval_rank": 14,
+            "distance": 0.62730672955513
+          },
+          {
+            "movieId": 2324,
+            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 15,
+            "distance": 0.6282558143138885
+          },
+          {
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 16,
+            "distance": 0.6309263706207275
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
             "retrieval_rank": 17,
-            "distance": 0.7055570185184479
+            "distance": 0.6309680640697479
           },
           {
-            "movieId": 110,
-            "title": "Braveheart (1995)",
-            "genres": "Action|Drama|War",
+            "movieId": 8961,
+            "title": "Incredibles, The (2004)",
+            "genres": "Action|Adventure|Animation|Children|Comedy",
             "retrieval_rank": 18,
-            "distance": 0.7062558531761169
+            "distance": 0.6320429146289825
           },
           {
-            "movieId": 593,
-            "title": "Silence of the Lambs, The (1991)",
-            "genres": "Crime|Horror|Thriller",
+            "movieId": 2997,
+            "title": "Being John Malkovich (1999)",
+            "genres": "Comedy|Drama|Fantasy",
             "retrieval_rank": 19,
-            "distance": 0.7101920545101166
+            "distance": 0.63294517993927
           },
           {
             "movieId": 1198,
             "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
             "genres": "Action|Adventure",
             "retrieval_rank": 20,
-            "distance": 0.7106324732303619
+            "distance": 0.6391143202781677
           },
           {
-            "movieId": 2369,
-            "title": "Desperately Seeking Susan (1985)",
-            "genres": "Comedy|Drama|Romance",
+            "movieId": 32587,
+            "title": "Sin City (2005)",
+            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
             "retrieval_rank": 21,
-            "distance": 0.7134082913398743
+            "distance": 0.63963583111763
           },
           {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
+            "movieId": 4306,
+            "title": "Shrek (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
             "retrieval_rank": 22,
-            "distance": 0.7136709988117218
+            "distance": 0.640264093875885
           },
           {
-            "movieId": 2690,
-            "title": "Ideal Husband, An (1999)",
-            "genres": "Comedy|Romance",
+            "movieId": 1208,
+            "title": "Apocalypse Now (1979)",
+            "genres": "Action|Drama|War",
             "retrieval_rank": 23,
-            "distance": 0.7169762253761292
+            "distance": 0.6417400240898132
           },
           {
-            "movieId": 2707,
-            "title": "Arlington Road (1999)",
-            "genres": "Thriller",
+            "movieId": 6539,
+            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
+            "genres": "Action|Adventure|Comedy|Fantasy",
             "retrieval_rank": 24,
-            "distance": 0.72227743268013
+            "distance": 0.6441915035247803
           },
           {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "movieId": 1732,
+            "title": "Big Lebowski, The (1998)",
+            "genres": "Comedy|Crime",
             "retrieval_rank": 25,
-            "distance": 0.7223495543003082
+            "distance": 0.6464794874191284
           }
         ],
         "timing": {
-          "hnsw_ms": 65.7,
-          "rerank_ms": 1.7
+          "hnsw_ms": 64.5,
+          "rerank_ms": 1.0
         },
         "usage": {
           "prompt_tokens": 0,
@@ -1941,549 +2772,272 @@
     },
     {
       "request": {
-        "user_id": 7,
+        "user_id": 33844,
         "query": "feel-good comedy for a rainy day",
         "top_k": 10
       },
       "response": {
         "recommendations": [
           {
-            "movieId": 3114,
-            "title": "Toy Story 2 (1999)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "rerank_score": 25.0,
-            "retrieval_rank": 2,
-            "distance": 0.6519792079925537
-          },
-          {
-            "movieId": 2355,
-            "title": "Bug's Life, A (1998)",
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
             "genres": "Adventure|Animation|Children|Comedy",
+            "rerank_score": 25.0,
+            "retrieval_rank": 16,
+            "distance": 0.6309263706207275
+          },
+          {
+            "movieId": 4306,
+            "title": "Shrek (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
             "rerank_score": 24.0,
-            "retrieval_rank": 1,
-            "distance": 0.6494719386100769
+            "retrieval_rank": 22,
+            "distance": 0.640264093875885
           },
           {
-            "movieId": 2724,
-            "title": "Runaway Bride (1999)",
-            "genres": "Comedy|Romance",
+            "movieId": 8961,
+            "title": "Incredibles, The (2004)",
+            "genres": "Action|Adventure|Animation|Children|Comedy",
             "rerank_score": 23.0,
-            "retrieval_rank": 8,
-            "distance": 0.6815093755722046
+            "retrieval_rank": 18,
+            "distance": 0.6320429146289825
           },
           {
-            "movieId": 2581,
-            "title": "Never Been Kissed (1999)",
-            "genres": "Comedy|Romance",
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
             "rerank_score": 22.0,
-            "retrieval_rank": 12,
-            "distance": 0.6975084543228149
+            "retrieval_rank": 17,
+            "distance": 0.6309680640697479
           },
           {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "movieId": 2324,
+            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
+            "genres": "Comedy|Drama|Romance|War",
             "rerank_score": 21.0,
-            "retrieval_rank": 25,
-            "distance": 0.7223495543003082
+            "retrieval_rank": 15,
+            "distance": 0.6282558143138885
           },
           {
-            "movieId": 2369,
-            "title": "Desperately Seeking Susan (1985)",
-            "genres": "Comedy|Drama|Romance",
+            "movieId": 6539,
+            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
+            "genres": "Action|Adventure|Comedy|Fantasy",
             "rerank_score": 20.0,
-            "retrieval_rank": 21,
-            "distance": 0.7134082913398743
+            "retrieval_rank": 24,
+            "distance": 0.6441915035247803
           },
           {
-            "movieId": 2690,
-            "title": "Ideal Husband, An (1999)",
-            "genres": "Comedy|Romance",
+            "movieId": 1732,
+            "title": "Big Lebowski, The (1998)",
+            "genres": "Comedy|Crime",
             "rerank_score": 19.0,
-            "retrieval_rank": 23,
-            "distance": 0.7169762253761292
+            "retrieval_rank": 25,
+            "distance": 0.6464794874191284
           },
           {
-            "movieId": 3157,
-            "title": "Stuart Little (1999)",
-            "genres": "Children|Comedy|Fantasy",
+            "movieId": 2542,
+            "title": "Lock, Stock & Two Smoking Barrels (1998)",
+            "genres": "Comedy|Crime|Thriller",
             "rerank_score": 18.0,
-            "retrieval_rank": 11,
-            "distance": 0.6878876686096191
+            "retrieval_rank": 13,
+            "distance": 0.6270284056663513
           },
           {
-            "movieId": 2394,
-            "title": "Prince of Egypt, The (1998)",
-            "genres": "Animation|Musical",
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
             "rerank_score": 17.0,
-            "retrieval_rank": 6,
-            "distance": 0.6801347732543945
+            "retrieval_rank": 11,
+            "distance": 0.6223281621932983
           },
           {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
+            "movieId": 2997,
+            "title": "Being John Malkovich (1999)",
+            "genres": "Comedy|Drama|Fantasy",
             "rerank_score": 16.0,
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
+            "retrieval_rank": 19,
+            "distance": 0.63294517993927
           }
         ],
         "candidates": [
           {
-            "movieId": 2355,
-            "title": "Bug's Life, A (1998)",
-            "genres": "Adventure|Animation|Children|Comedy",
+            "movieId": 7153,
+            "title": "Lord of the Rings: The Return of the King, The (2003)",
+            "genres": "Action|Adventure|Drama|Fantasy",
             "retrieval_rank": 1,
-            "distance": 0.6494719386100769
+            "distance": 0.5794929563999176
           },
           {
-            "movieId": 3114,
-            "title": "Toy Story 2 (1999)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
+            "movieId": 5952,
+            "title": "Lord of the Rings: The Two Towers, The (2002)",
+            "genres": "Adventure|Fantasy",
             "retrieval_rank": 2,
-            "distance": 0.6519792079925537
-          },
-          {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
-          },
-          {
-            "movieId": 3155,
-            "title": "Anna and the King (1999)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 4,
-            "distance": 0.6768601536750793
-          },
-          {
-            "movieId": 1959,
-            "title": "Out of Africa (1985)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 5,
-            "distance": 0.6779201030731201
-          },
-          {
-            "movieId": 2394,
-            "title": "Prince of Egypt, The (1998)",
-            "genres": "Animation|Musical",
-            "retrieval_rank": 6,
-            "distance": 0.6801347732543945
-          },
-          {
-            "movieId": 4022,
-            "title": "Cast Away (2000)",
-            "genres": "Drama",
-            "retrieval_rank": 7,
-            "distance": 0.6806843280792236
-          },
-          {
-            "movieId": 2724,
-            "title": "Runaway Bride (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 8,
-            "distance": 0.6815093755722046
-          },
-          {
-            "movieId": 2688,
-            "title": "General's Daughter, The (1999)",
-            "genres": "Crime|Drama|Mystery|Thriller",
-            "retrieval_rank": 9,
-            "distance": 0.6819750070571899
-          },
-          {
-            "movieId": 2605,
-            "title": "Entrapment (1999)",
-            "genres": "Crime|Thriller",
-            "retrieval_rank": 10,
-            "distance": 0.6834427714347839
-          },
-          {
-            "movieId": 3157,
-            "title": "Stuart Little (1999)",
-            "genres": "Children|Comedy|Fantasy",
-            "retrieval_rank": 11,
-            "distance": 0.6878876686096191
-          },
-          {
-            "movieId": 2581,
-            "title": "Never Been Kissed (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 12,
-            "distance": 0.6975084543228149
-          },
-          {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.6989116668701172
+            "distance": 0.59232297539711
           },
           {
             "movieId": 527,
             "title": "Schindler's List (1993)",
             "genres": "Drama|War",
-            "retrieval_rank": 14,
-            "distance": 0.7017695903778076
+            "retrieval_rank": 3,
+            "distance": 0.6003251075744629
           },
           {
-            "movieId": 3623,
-            "title": "Mission: Impossible II (2000)",
-            "genres": "Action|Adventure|Thriller",
-            "retrieval_rank": 15,
-            "distance": 0.7021772861480713
+            "movieId": 6874,
+            "title": "Kill Bill: Vol. 1 (2003)",
+            "genres": "Action|Crime|Thriller",
+            "retrieval_rank": 4,
+            "distance": 0.6009483337402344
           },
           {
-            "movieId": 3101,
-            "title": "Fatal Attraction (1987)",
-            "genres": "Drama|Thriller",
-            "retrieval_rank": 16,
-            "distance": 0.702755868434906
+            "movieId": 30749,
+            "title": "Hotel Rwanda (2004)",
+            "genres": "Drama|War",
+            "retrieval_rank": 5,
+            "distance": 0.6051924824714661
           },
           {
-            "movieId": 2433,
-            "title": "Civil Action, A (1998)",
+            "movieId": 7438,
+            "title": "Kill Bill: Vol. 2 (2004)",
+            "genres": "Action|Drama|Thriller",
+            "retrieval_rank": 6,
+            "distance": 0.6118839979171753
+          },
+          {
+            "movieId": 4034,
+            "title": "Traffic (2000)",
+            "genres": "Crime|Drama|Thriller",
+            "retrieval_rank": 7,
+            "distance": 0.6142849028110504
+          },
+          {
+            "movieId": 1089,
+            "title": "Reservoir Dogs (1992)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 8,
+            "distance": 0.6154246926307678
+          },
+          {
+            "movieId": 1221,
+            "title": "Godfather: Part II, The (1974)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 9,
+            "distance": 0.6205251514911652
+          },
+          {
+            "movieId": 2692,
+            "title": "Run Lola Run (Lola rennt) (1998)",
+            "genres": "Action|Crime",
+            "retrieval_rank": 10,
+            "distance": 0.6216762363910675
+          },
+          {
+            "movieId": 608,
+            "title": "Fargo (1996)",
+            "genres": "Comedy|Crime|Drama|Thriller",
+            "retrieval_rank": 11,
+            "distance": 0.6223281621932983
+          },
+          {
+            "movieId": 6870,
+            "title": "Mystic River (2003)",
+            "genres": "Crime|Drama|Mystery",
+            "retrieval_rank": 12,
+            "distance": 0.6246588230133057
+          },
+          {
+            "movieId": 2542,
+            "title": "Lock, Stock & Two Smoking Barrels (1998)",
+            "genres": "Comedy|Crime|Thriller",
+            "retrieval_rank": 13,
+            "distance": 0.6270284056663513
+          },
+          {
+            "movieId": 1358,
+            "title": "Sling Blade (1996)",
             "genres": "Drama",
+            "retrieval_rank": 14,
+            "distance": 0.62730672955513
+          },
+          {
+            "movieId": 2324,
+            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 15,
+            "distance": 0.6282558143138885
+          },
+          {
+            "movieId": 6377,
+            "title": "Finding Nemo (2003)",
+            "genres": "Adventure|Animation|Children|Comedy",
+            "retrieval_rank": 16,
+            "distance": 0.6309263706207275
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
             "retrieval_rank": 17,
-            "distance": 0.7055570185184479
+            "distance": 0.6309680640697479
           },
           {
-            "movieId": 110,
-            "title": "Braveheart (1995)",
-            "genres": "Action|Drama|War",
+            "movieId": 8961,
+            "title": "Incredibles, The (2004)",
+            "genres": "Action|Adventure|Animation|Children|Comedy",
             "retrieval_rank": 18,
-            "distance": 0.7062558531761169
+            "distance": 0.6320429146289825
           },
           {
-            "movieId": 593,
-            "title": "Silence of the Lambs, The (1991)",
-            "genres": "Crime|Horror|Thriller",
+            "movieId": 2997,
+            "title": "Being John Malkovich (1999)",
+            "genres": "Comedy|Drama|Fantasy",
             "retrieval_rank": 19,
-            "distance": 0.7101920545101166
+            "distance": 0.63294517993927
           },
           {
             "movieId": 1198,
             "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
             "genres": "Action|Adventure",
             "retrieval_rank": 20,
-            "distance": 0.7106324732303619
+            "distance": 0.6391143202781677
           },
           {
-            "movieId": 2369,
-            "title": "Desperately Seeking Susan (1985)",
-            "genres": "Comedy|Drama|Romance",
+            "movieId": 32587,
+            "title": "Sin City (2005)",
+            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
             "retrieval_rank": 21,
-            "distance": 0.7134082913398743
+            "distance": 0.63963583111763
           },
           {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
+            "movieId": 4306,
+            "title": "Shrek (2001)",
+            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
             "retrieval_rank": 22,
-            "distance": 0.7136709988117218
+            "distance": 0.640264093875885
           },
           {
-            "movieId": 2690,
-            "title": "Ideal Husband, An (1999)",
-            "genres": "Comedy|Romance",
+            "movieId": 1208,
+            "title": "Apocalypse Now (1979)",
+            "genres": "Action|Drama|War",
             "retrieval_rank": 23,
-            "distance": 0.7169762253761292
+            "distance": 0.6417400240898132
           },
           {
-            "movieId": 2707,
-            "title": "Arlington Road (1999)",
-            "genres": "Thriller",
+            "movieId": 6539,
+            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
+            "genres": "Action|Adventure|Comedy|Fantasy",
             "retrieval_rank": 24,
-            "distance": 0.72227743268013
+            "distance": 0.6441915035247803
           },
           {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
+            "movieId": 1732,
+            "title": "Big Lebowski, The (1998)",
+            "genres": "Comedy|Crime",
             "retrieval_rank": 25,
-            "distance": 0.7223495543003082
+            "distance": 0.6464794874191284
           }
         ],
         "timing": {
-          "hnsw_ms": 67.6,
-          "rerank_ms": 778.1
-        },
-        "usage": {
-          "prompt_tokens": 605,
-          "completion_tokens": 338,
-          "cached": false
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 7,
-        "query": "dark crime drama with a great ending",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
-            "rerank_score": 25.0,
-            "retrieval_rank": 22,
-            "distance": 0.7136709988117218
-          },
-          {
-            "movieId": 2688,
-            "title": "General's Daughter, The (1999)",
-            "genres": "Crime|Drama|Mystery|Thriller",
-            "rerank_score": 24.0,
-            "retrieval_rank": 9,
-            "distance": 0.6819750070571899
-          },
-          {
-            "movieId": 593,
-            "title": "Silence of the Lambs, The (1991)",
-            "genres": "Crime|Horror|Thriller",
-            "rerank_score": 23.0,
-            "retrieval_rank": 19,
-            "distance": 0.7101920545101166
-          },
-          {
-            "movieId": 2605,
-            "title": "Entrapment (1999)",
-            "genres": "Crime|Thriller",
-            "rerank_score": 22.0,
-            "retrieval_rank": 10,
-            "distance": 0.6834427714347839
-          },
-          {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
-            "rerank_score": 21.0,
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
-          },
-          {
-            "movieId": 3101,
-            "title": "Fatal Attraction (1987)",
-            "genres": "Drama|Thriller",
-            "rerank_score": 20.0,
-            "retrieval_rank": 16,
-            "distance": 0.702755868434906
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "rerank_score": 19.0,
-            "retrieval_rank": 14,
-            "distance": 0.7017695903778076
-          },
-          {
-            "movieId": 110,
-            "title": "Braveheart (1995)",
-            "genres": "Action|Drama|War",
-            "rerank_score": 18.0,
-            "retrieval_rank": 18,
-            "distance": 0.7062558531761169
-          },
-          {
-            "movieId": 4022,
-            "title": "Cast Away (2000)",
-            "genres": "Drama",
-            "rerank_score": 17.0,
-            "retrieval_rank": 7,
-            "distance": 0.6806843280792236
-          },
-          {
-            "movieId": 1959,
-            "title": "Out of Africa (1985)",
-            "genres": "Drama|Romance",
-            "rerank_score": 16.0,
-            "retrieval_rank": 5,
-            "distance": 0.6779201030731201
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 2355,
-            "title": "Bug's Life, A (1998)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 1,
-            "distance": 0.6494719386100769
-          },
-          {
-            "movieId": 3114,
-            "title": "Toy Story 2 (1999)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy",
-            "retrieval_rank": 2,
-            "distance": 0.6519792079925537
-          },
-          {
-            "movieId": 2763,
-            "title": "Thomas Crown Affair, The (1999)",
-            "genres": "Action|Mystery",
-            "retrieval_rank": 3,
-            "distance": 0.672575443983078
-          },
-          {
-            "movieId": 3155,
-            "title": "Anna and the King (1999)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 4,
-            "distance": 0.6768601536750793
-          },
-          {
-            "movieId": 1959,
-            "title": "Out of Africa (1985)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 5,
-            "distance": 0.6779201030731201
-          },
-          {
-            "movieId": 2394,
-            "title": "Prince of Egypt, The (1998)",
-            "genres": "Animation|Musical",
-            "retrieval_rank": 6,
-            "distance": 0.6801347732543945
-          },
-          {
-            "movieId": 4022,
-            "title": "Cast Away (2000)",
-            "genres": "Drama",
-            "retrieval_rank": 7,
-            "distance": 0.6806843280792236
-          },
-          {
-            "movieId": 2724,
-            "title": "Runaway Bride (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 8,
-            "distance": 0.6815093755722046
-          },
-          {
-            "movieId": 2688,
-            "title": "General's Daughter, The (1999)",
-            "genres": "Crime|Drama|Mystery|Thriller",
-            "retrieval_rank": 9,
-            "distance": 0.6819750070571899
-          },
-          {
-            "movieId": 2605,
-            "title": "Entrapment (1999)",
-            "genres": "Crime|Thriller",
-            "retrieval_rank": 10,
-            "distance": 0.6834427714347839
-          },
-          {
-            "movieId": 3157,
-            "title": "Stuart Little (1999)",
-            "genres": "Children|Comedy|Fantasy",
-            "retrieval_rank": 11,
-            "distance": 0.6878876686096191
-          },
-          {
-            "movieId": 2581,
-            "title": "Never Been Kissed (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 12,
-            "distance": 0.6975084543228149
-          },
-          {
-            "movieId": 1127,
-            "title": "Abyss, The (1989)",
-            "genres": "Action|Adventure|Sci-Fi|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.6989116668701172
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "retrieval_rank": 14,
-            "distance": 0.7017695903778076
-          },
-          {
-            "movieId": 3623,
-            "title": "Mission: Impossible II (2000)",
-            "genres": "Action|Adventure|Thriller",
-            "retrieval_rank": 15,
-            "distance": 0.7021772861480713
-          },
-          {
-            "movieId": 3101,
-            "title": "Fatal Attraction (1987)",
-            "genres": "Drama|Thriller",
-            "retrieval_rank": 16,
-            "distance": 0.702755868434906
-          },
-          {
-            "movieId": 2433,
-            "title": "Civil Action, A (1998)",
-            "genres": "Drama",
-            "retrieval_rank": 17,
-            "distance": 0.7055570185184479
-          },
-          {
-            "movieId": 110,
-            "title": "Braveheart (1995)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 18,
-            "distance": 0.7062558531761169
-          },
-          {
-            "movieId": 593,
-            "title": "Silence of the Lambs, The (1991)",
-            "genres": "Crime|Horror|Thriller",
-            "retrieval_rank": 19,
-            "distance": 0.7101920545101166
-          },
-          {
-            "movieId": 1198,
-            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
-            "genres": "Action|Adventure",
-            "retrieval_rank": 20,
-            "distance": 0.7106324732303619
-          },
-          {
-            "movieId": 2369,
-            "title": "Desperately Seeking Susan (1985)",
-            "genres": "Comedy|Drama|Romance",
-            "retrieval_rank": 21,
-            "distance": 0.7134082913398743
-          },
-          {
-            "movieId": 318,
-            "title": "Shawshank Redemption, The (1994)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 22,
-            "distance": 0.7136709988117218
-          },
-          {
-            "movieId": 2690,
-            "title": "Ideal Husband, An (1999)",
-            "genres": "Comedy|Romance",
-            "retrieval_rank": 23,
-            "distance": 0.7169762253761292
-          },
-          {
-            "movieId": 2707,
-            "title": "Arlington Road (1999)",
-            "genres": "Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.72227743268013
-          },
-          {
-            "movieId": 1197,
-            "title": "Princess Bride, The (1987)",
-            "genres": "Action|Adventure|Comedy|Fantasy|Romance",
-            "retrieval_rank": 25,
-            "distance": 0.7223495543003082
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 56.3,
+          "hnsw_ms": 64.2,
           "rerank_ms": 1.2
         },
         "usage": {
@@ -2496,560 +3050,6 @@
     {
       "request": {
         "user_id": 33844,
-        "query": "a mind-bending sci-fi thriller",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 2997,
-            "title": "Being John Malkovich (1999)",
-            "genres": "Comedy|Drama|Fantasy",
-            "rerank_score": 25.0,
-            "retrieval_rank": 19,
-            "distance": 0.63294517993927
-          },
-          {
-            "movieId": 32587,
-            "title": "Sin City (2005)",
-            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
-            "rerank_score": 24.0,
-            "retrieval_rank": 21,
-            "distance": 0.63963583111763
-          },
-          {
-            "movieId": 1089,
-            "title": "Reservoir Dogs (1992)",
-            "genres": "Crime|Mystery|Thriller",
-            "rerank_score": 23.0,
-            "retrieval_rank": 8,
-            "distance": 0.6154246926307678
-          },
-          {
-            "movieId": 6874,
-            "title": "Kill Bill: Vol. 1 (2003)",
-            "genres": "Action|Crime|Thriller",
-            "rerank_score": 22.0,
-            "retrieval_rank": 4,
-            "distance": 0.6009483337402344
-          },
-          {
-            "movieId": 7438,
-            "title": "Kill Bill: Vol. 2 (2004)",
-            "genres": "Action|Drama|Thriller",
-            "rerank_score": 21.0,
-            "retrieval_rank": 6,
-            "distance": 0.6118839979171753
-          },
-          {
-            "movieId": 2692,
-            "title": "Run Lola Run (Lola rennt) (1998)",
-            "genres": "Action|Crime",
-            "rerank_score": 20.0,
-            "retrieval_rank": 10,
-            "distance": 0.6216762363910675
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "rerank_score": 19.0,
-            "retrieval_rank": 11,
-            "distance": 0.6223281621932983
-          },
-          {
-            "movieId": 4034,
-            "title": "Traffic (2000)",
-            "genres": "Crime|Drama|Thriller",
-            "rerank_score": 18.0,
-            "retrieval_rank": 7,
-            "distance": 0.6142849028110504
-          },
-          {
-            "movieId": 2542,
-            "title": "Lock, Stock & Two Smoking Barrels (1998)",
-            "genres": "Comedy|Crime|Thriller",
-            "rerank_score": 17.0,
-            "retrieval_rank": 13,
-            "distance": 0.6270284056663513
-          },
-          {
-            "movieId": 6870,
-            "title": "Mystic River (2003)",
-            "genres": "Crime|Drama|Mystery",
-            "rerank_score": 16.0,
-            "retrieval_rank": 12,
-            "distance": 0.6246588230133057
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 7153,
-            "title": "Lord of the Rings: The Return of the King, The (2003)",
-            "genres": "Action|Adventure|Drama|Fantasy",
-            "retrieval_rank": 1,
-            "distance": 0.5794929563999176
-          },
-          {
-            "movieId": 5952,
-            "title": "Lord of the Rings: The Two Towers, The (2002)",
-            "genres": "Adventure|Fantasy",
-            "retrieval_rank": 2,
-            "distance": 0.59232297539711
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "retrieval_rank": 3,
-            "distance": 0.6003251075744629
-          },
-          {
-            "movieId": 6874,
-            "title": "Kill Bill: Vol. 1 (2003)",
-            "genres": "Action|Crime|Thriller",
-            "retrieval_rank": 4,
-            "distance": 0.6009483337402344
-          },
-          {
-            "movieId": 30749,
-            "title": "Hotel Rwanda (2004)",
-            "genres": "Drama|War",
-            "retrieval_rank": 5,
-            "distance": 0.6051924824714661
-          },
-          {
-            "movieId": 7438,
-            "title": "Kill Bill: Vol. 2 (2004)",
-            "genres": "Action|Drama|Thriller",
-            "retrieval_rank": 6,
-            "distance": 0.6118839979171753
-          },
-          {
-            "movieId": 4034,
-            "title": "Traffic (2000)",
-            "genres": "Crime|Drama|Thriller",
-            "retrieval_rank": 7,
-            "distance": 0.6142849028110504
-          },
-          {
-            "movieId": 1089,
-            "title": "Reservoir Dogs (1992)",
-            "genres": "Crime|Mystery|Thriller",
-            "retrieval_rank": 8,
-            "distance": 0.6154246926307678
-          },
-          {
-            "movieId": 1221,
-            "title": "Godfather: Part II, The (1974)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 9,
-            "distance": 0.6205251514911652
-          },
-          {
-            "movieId": 2692,
-            "title": "Run Lola Run (Lola rennt) (1998)",
-            "genres": "Action|Crime",
-            "retrieval_rank": 10,
-            "distance": 0.6216762363910675
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "retrieval_rank": 11,
-            "distance": 0.6223281621932983
-          },
-          {
-            "movieId": 6870,
-            "title": "Mystic River (2003)",
-            "genres": "Crime|Drama|Mystery",
-            "retrieval_rank": 12,
-            "distance": 0.6246588230133057
-          },
-          {
-            "movieId": 2542,
-            "title": "Lock, Stock & Two Smoking Barrels (1998)",
-            "genres": "Comedy|Crime|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.6270284056663513
-          },
-          {
-            "movieId": 1358,
-            "title": "Sling Blade (1996)",
-            "genres": "Drama",
-            "retrieval_rank": 14,
-            "distance": 0.62730672955513
-          },
-          {
-            "movieId": 2324,
-            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 15,
-            "distance": 0.6282558143138885
-          },
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 16,
-            "distance": 0.6309263706207275
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 17,
-            "distance": 0.6309680640697479
-          },
-          {
-            "movieId": 8961,
-            "title": "Incredibles, The (2004)",
-            "genres": "Action|Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 18,
-            "distance": 0.6320429146289825
-          },
-          {
-            "movieId": 2997,
-            "title": "Being John Malkovich (1999)",
-            "genres": "Comedy|Drama|Fantasy",
-            "retrieval_rank": 19,
-            "distance": 0.63294517993927
-          },
-          {
-            "movieId": 1198,
-            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
-            "genres": "Action|Adventure",
-            "retrieval_rank": 20,
-            "distance": 0.6391143202781677
-          },
-          {
-            "movieId": 32587,
-            "title": "Sin City (2005)",
-            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
-            "retrieval_rank": 21,
-            "distance": 0.63963583111763
-          },
-          {
-            "movieId": 4306,
-            "title": "Shrek (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
-            "retrieval_rank": 22,
-            "distance": 0.640264093875885
-          },
-          {
-            "movieId": 1208,
-            "title": "Apocalypse Now (1979)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 23,
-            "distance": 0.6417400240898132
-          },
-          {
-            "movieId": 6539,
-            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
-            "genres": "Action|Adventure|Comedy|Fantasy",
-            "retrieval_rank": 24,
-            "distance": 0.6441915035247803
-          },
-          {
-            "movieId": 1732,
-            "title": "Big Lebowski, The (1998)",
-            "genres": "Comedy|Crime",
-            "retrieval_rank": 25,
-            "distance": 0.6464794874191284
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 57.7,
-          "rerank_ms": 1.4
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 33844,
-        "query": "feel-good comedy for a rainy day",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "rerank_score": 25.0,
-            "retrieval_rank": 16,
-            "distance": 0.6309263706207275
-          },
-          {
-            "movieId": 4306,
-            "title": "Shrek (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
-            "rerank_score": 24.0,
-            "retrieval_rank": 22,
-            "distance": 0.640264093875885
-          },
-          {
-            "movieId": 8961,
-            "title": "Incredibles, The (2004)",
-            "genres": "Action|Adventure|Animation|Children|Comedy",
-            "rerank_score": 23.0,
-            "retrieval_rank": 18,
-            "distance": 0.6320429146289825
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "rerank_score": 22.0,
-            "retrieval_rank": 17,
-            "distance": 0.6309680640697479
-          },
-          {
-            "movieId": 2324,
-            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
-            "genres": "Comedy|Drama|Romance|War",
-            "rerank_score": 21.0,
-            "retrieval_rank": 15,
-            "distance": 0.6282558143138885
-          },
-          {
-            "movieId": 6539,
-            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
-            "genres": "Action|Adventure|Comedy|Fantasy",
-            "rerank_score": 20.0,
-            "retrieval_rank": 24,
-            "distance": 0.6441915035247803
-          },
-          {
-            "movieId": 1732,
-            "title": "Big Lebowski, The (1998)",
-            "genres": "Comedy|Crime",
-            "rerank_score": 19.0,
-            "retrieval_rank": 25,
-            "distance": 0.6464794874191284
-          },
-          {
-            "movieId": 2542,
-            "title": "Lock, Stock & Two Smoking Barrels (1998)",
-            "genres": "Comedy|Crime|Thriller",
-            "rerank_score": 18.0,
-            "retrieval_rank": 13,
-            "distance": 0.6270284056663513
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "rerank_score": 17.0,
-            "retrieval_rank": 11,
-            "distance": 0.6223281621932983
-          },
-          {
-            "movieId": 2997,
-            "title": "Being John Malkovich (1999)",
-            "genres": "Comedy|Drama|Fantasy",
-            "rerank_score": 16.0,
-            "retrieval_rank": 19,
-            "distance": 0.63294517993927
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 7153,
-            "title": "Lord of the Rings: The Return of the King, The (2003)",
-            "genres": "Action|Adventure|Drama|Fantasy",
-            "retrieval_rank": 1,
-            "distance": 0.5794929563999176
-          },
-          {
-            "movieId": 5952,
-            "title": "Lord of the Rings: The Two Towers, The (2002)",
-            "genres": "Adventure|Fantasy",
-            "retrieval_rank": 2,
-            "distance": 0.59232297539711
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "retrieval_rank": 3,
-            "distance": 0.6003251075744629
-          },
-          {
-            "movieId": 6874,
-            "title": "Kill Bill: Vol. 1 (2003)",
-            "genres": "Action|Crime|Thriller",
-            "retrieval_rank": 4,
-            "distance": 0.6009483337402344
-          },
-          {
-            "movieId": 30749,
-            "title": "Hotel Rwanda (2004)",
-            "genres": "Drama|War",
-            "retrieval_rank": 5,
-            "distance": 0.6051924824714661
-          },
-          {
-            "movieId": 7438,
-            "title": "Kill Bill: Vol. 2 (2004)",
-            "genres": "Action|Drama|Thriller",
-            "retrieval_rank": 6,
-            "distance": 0.6118839979171753
-          },
-          {
-            "movieId": 4034,
-            "title": "Traffic (2000)",
-            "genres": "Crime|Drama|Thriller",
-            "retrieval_rank": 7,
-            "distance": 0.6142849028110504
-          },
-          {
-            "movieId": 1089,
-            "title": "Reservoir Dogs (1992)",
-            "genres": "Crime|Mystery|Thriller",
-            "retrieval_rank": 8,
-            "distance": 0.6154246926307678
-          },
-          {
-            "movieId": 1221,
-            "title": "Godfather: Part II, The (1974)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 9,
-            "distance": 0.6205251514911652
-          },
-          {
-            "movieId": 2692,
-            "title": "Run Lola Run (Lola rennt) (1998)",
-            "genres": "Action|Crime",
-            "retrieval_rank": 10,
-            "distance": 0.6216762363910675
-          },
-          {
-            "movieId": 608,
-            "title": "Fargo (1996)",
-            "genres": "Comedy|Crime|Drama|Thriller",
-            "retrieval_rank": 11,
-            "distance": 0.6223281621932983
-          },
-          {
-            "movieId": 6870,
-            "title": "Mystic River (2003)",
-            "genres": "Crime|Drama|Mystery",
-            "retrieval_rank": 12,
-            "distance": 0.6246588230133057
-          },
-          {
-            "movieId": 2542,
-            "title": "Lock, Stock & Two Smoking Barrels (1998)",
-            "genres": "Comedy|Crime|Thriller",
-            "retrieval_rank": 13,
-            "distance": 0.6270284056663513
-          },
-          {
-            "movieId": 1358,
-            "title": "Sling Blade (1996)",
-            "genres": "Drama",
-            "retrieval_rank": 14,
-            "distance": 0.62730672955513
-          },
-          {
-            "movieId": 2324,
-            "title": "Life Is Beautiful (La Vita \u00e8 bella) (1997)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 15,
-            "distance": 0.6282558143138885
-          },
-          {
-            "movieId": 6377,
-            "title": "Finding Nemo (2003)",
-            "genres": "Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 16,
-            "distance": 0.6309263706207275
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 17,
-            "distance": 0.6309680640697479
-          },
-          {
-            "movieId": 8961,
-            "title": "Incredibles, The (2004)",
-            "genres": "Action|Adventure|Animation|Children|Comedy",
-            "retrieval_rank": 18,
-            "distance": 0.6320429146289825
-          },
-          {
-            "movieId": 2997,
-            "title": "Being John Malkovich (1999)",
-            "genres": "Comedy|Drama|Fantasy",
-            "retrieval_rank": 19,
-            "distance": 0.63294517993927
-          },
-          {
-            "movieId": 1198,
-            "title": "Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)",
-            "genres": "Action|Adventure",
-            "retrieval_rank": 20,
-            "distance": 0.6391143202781677
-          },
-          {
-            "movieId": 32587,
-            "title": "Sin City (2005)",
-            "genres": "Action|Crime|Film-Noir|Mystery|Thriller",
-            "retrieval_rank": 21,
-            "distance": 0.63963583111763
-          },
-          {
-            "movieId": 4306,
-            "title": "Shrek (2001)",
-            "genres": "Adventure|Animation|Children|Comedy|Fantasy|Romance",
-            "retrieval_rank": 22,
-            "distance": 0.640264093875885
-          },
-          {
-            "movieId": 1208,
-            "title": "Apocalypse Now (1979)",
-            "genres": "Action|Drama|War",
-            "retrieval_rank": 23,
-            "distance": 0.6417400240898132
-          },
-          {
-            "movieId": 6539,
-            "title": "Pirates of the Caribbean: The Curse of the Black Pearl (2003)",
-            "genres": "Action|Adventure|Comedy|Fantasy",
-            "retrieval_rank": 24,
-            "distance": 0.6441915035247803
-          },
-          {
-            "movieId": 1732,
-            "title": "Big Lebowski, The (1998)",
-            "genres": "Comedy|Crime",
-            "retrieval_rank": 25,
-            "distance": 0.6464794874191284
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 65.2,
-          "rerank_ms": 0.7
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 33844,
         "query": "dark crime drama with a great ending",
         "top_k": 10
       },
@@ -3314,8 +3314,8 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 67.5,
-          "rerank_ms": 0.5
+          "hnsw_ms": 56.1,
+          "rerank_ms": 1.2
         },
         "usage": {
           "prompt_tokens": 0,
@@ -3591,8 +3591,8 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 71.4,
-          "rerank_ms": 0.4
+          "hnsw_ms": 59.8,
+          "rerank_ms": 1.2
         },
         "usage": {
           "prompt_tokens": 0,
@@ -3868,285 +3868,285 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 82.0,
+          "hnsw_ms": 77.6,
+          "rerank_ms": 1.2
+        },
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
+        }
+      }
+    },
+    {
+      "request": {
+        "user_id": 96421,
+        "query": "dark crime drama with a great ending",
+        "top_k": 10
+      },
+      "response": {
+        "recommendations": [
+          {
+            "movieId": 50,
+            "title": "Usual Suspects, The (1995)",
+            "genres": "Crime|Mystery|Thriller",
+            "rerank_score": 25.0,
+            "retrieval_rank": 2,
+            "distance": 0.6607505679130554
+          },
+          {
+            "movieId": 55820,
+            "title": "No Country for Old Men (2007)",
+            "genres": "Crime|Drama",
+            "rerank_score": 24.0,
+            "retrieval_rank": 6,
+            "distance": 0.6679127812385559
+          },
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "rerank_score": 23.0,
+            "retrieval_rank": 8,
+            "distance": 0.6715783178806305
+          },
+          {
+            "movieId": 49530,
+            "title": "Blood Diamond (2006)",
+            "genres": "Action|Adventure|Crime|Drama|Thriller|War",
+            "rerank_score": 22.0,
+            "retrieval_rank": 13,
+            "distance": 0.6781643033027649
+          },
+          {
+            "movieId": 80489,
+            "title": "Town, The (2010)",
+            "genres": "Crime|Drama|Thriller",
+            "rerank_score": 21.0,
+            "retrieval_rank": 18,
+            "distance": 0.6831252574920654
+          },
+          {
+            "movieId": 48780,
+            "title": "Prestige, The (2006)",
+            "genres": "Drama|Mystery|Sci-Fi|Thriller",
+            "rerank_score": 20.0,
+            "retrieval_rank": 3,
+            "distance": 0.6622114479541779
+          },
+          {
+            "movieId": 63082,
+            "title": "Slumdog Millionaire (2008)",
+            "genres": "Crime|Drama|Romance",
+            "rerank_score": 19.0,
+            "retrieval_rank": 1,
+            "distance": 0.6532958447933197
+          },
+          {
+            "movieId": 59369,
+            "title": "Taken (2008)",
+            "genres": "Action|Crime|Drama|Thriller",
+            "rerank_score": 18.0,
+            "retrieval_rank": 23,
+            "distance": 0.6847666501998901
+          },
+          {
+            "movieId": 54286,
+            "title": "Bourne Ultimatum, The (2007)",
+            "genres": "Action|Crime|Thriller",
+            "rerank_score": 17.0,
+            "retrieval_rank": 25,
+            "distance": 0.6868285834789276
+          },
+          {
+            "movieId": 5418,
+            "title": "Bourne Identity, The (2002)",
+            "genres": "Action|Mystery|Thriller",
+            "rerank_score": 16.0,
+            "retrieval_rank": 20,
+            "distance": 0.6837476789951324
+          }
+        ],
+        "candidates": [
+          {
+            "movieId": 63082,
+            "title": "Slumdog Millionaire (2008)",
+            "genres": "Crime|Drama|Romance",
+            "retrieval_rank": 1,
+            "distance": 0.6532958447933197
+          },
+          {
+            "movieId": 50,
+            "title": "Usual Suspects, The (1995)",
+            "genres": "Crime|Mystery|Thriller",
+            "retrieval_rank": 2,
+            "distance": 0.6607505679130554
+          },
+          {
+            "movieId": 48780,
+            "title": "Prestige, The (2006)",
+            "genres": "Drama|Mystery|Sci-Fi|Thriller",
+            "retrieval_rank": 3,
+            "distance": 0.6622114479541779
+          },
+          {
+            "movieId": 2858,
+            "title": "American Beauty (1999)",
+            "genres": "Comedy|Drama",
+            "retrieval_rank": 4,
+            "distance": 0.6625431478023529
+          },
+          {
+            "movieId": 80463,
+            "title": "Social Network, The (2010)",
+            "genres": "Drama",
+            "retrieval_rank": 5,
+            "distance": 0.6637691259384155
+          },
+          {
+            "movieId": 55820,
+            "title": "No Country for Old Men (2007)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 6,
+            "distance": 0.6679127812385559
+          },
+          {
+            "movieId": 356,
+            "title": "Forrest Gump (1994)",
+            "genres": "Comedy|Drama|Romance|War",
+            "retrieval_rank": 7,
+            "distance": 0.6681075096130371
+          },
+          {
+            "movieId": 858,
+            "title": "Godfather, The (1972)",
+            "genres": "Crime|Drama",
+            "retrieval_rank": 8,
+            "distance": 0.6715783178806305
+          },
+          {
+            "movieId": 69757,
+            "title": "(500) Days of Summer (2009)",
+            "genres": "Comedy|Drama|Romance",
+            "retrieval_rank": 9,
+            "distance": 0.6725431680679321
+          },
+          {
+            "movieId": 527,
+            "title": "Schindler's List (1993)",
+            "genres": "Drama|War",
+            "retrieval_rank": 10,
+            "distance": 0.6744959652423859
+          },
+          {
+            "movieId": 69481,
+            "title": "Hurt Locker, The (2008)",
+            "genres": "Action|Drama|Thriller|War",
+            "retrieval_rank": 11,
+            "distance": 0.674604594707489
+          },
+          {
+            "movieId": 55247,
+            "title": "Into the Wild (2007)",
+            "genres": "Action|Adventure|Drama",
+            "retrieval_rank": 12,
+            "distance": 0.6759499311447144
+          },
+          {
+            "movieId": 49530,
+            "title": "Blood Diamond (2006)",
+            "genres": "Action|Adventure|Crime|Drama|Thriller|War",
+            "retrieval_rank": 13,
+            "distance": 0.6781643033027649
+          },
+          {
+            "movieId": 72998,
+            "title": "Avatar (2009)",
+            "genres": "Action|Adventure|Sci-Fi|IMAX",
+            "retrieval_rank": 14,
+            "distance": 0.6803029179573059
+          },
+          {
+            "movieId": 1704,
+            "title": "Good Will Hunting (1997)",
+            "genres": "Drama|Romance",
+            "retrieval_rank": 15,
+            "distance": 0.6803109049797058
+          },
+          {
+            "movieId": 69122,
+            "title": "Hangover, The (2009)",
+            "genres": "Comedy|Crime",
+            "retrieval_rank": 16,
+            "distance": 0.6821418404579163
+          },
+          {
+            "movieId": 70286,
+            "title": "District 9 (2009)",
+            "genres": "Mystery|Sci-Fi|Thriller",
+            "retrieval_rank": 17,
+            "distance": 0.6827405691146851
+          },
+          {
+            "movieId": 80489,
+            "title": "Town, The (2010)",
+            "genres": "Crime|Drama|Thriller",
+            "retrieval_rank": 18,
+            "distance": 0.6831252574920654
+          },
+          {
+            "movieId": 68954,
+            "title": "Up (2009)",
+            "genres": "Adventure|Animation|Children|Drama",
+            "retrieval_rank": 19,
+            "distance": 0.6834073066711426
+          },
+          {
+            "movieId": 5418,
+            "title": "Bourne Identity, The (2002)",
+            "genres": "Action|Mystery|Thriller",
+            "retrieval_rank": 20,
+            "distance": 0.6837476789951324
+          },
+          {
+            "movieId": 7153,
+            "title": "Lord of the Rings: The Return of the King, The (2003)",
+            "genres": "Action|Adventure|Drama|Fantasy",
+            "retrieval_rank": 21,
+            "distance": 0.6840827763080597
+          },
+          {
+            "movieId": 7361,
+            "title": "Eternal Sunshine of the Spotless Mind (2004)",
+            "genres": "Drama|Romance|Sci-Fi",
+            "retrieval_rank": 22,
+            "distance": 0.6842794418334961
+          },
+          {
+            "movieId": 59369,
+            "title": "Taken (2008)",
+            "genres": "Action|Crime|Drama|Thriller",
+            "retrieval_rank": 23,
+            "distance": 0.6847666501998901
+          },
+          {
+            "movieId": 81562,
+            "title": "127 Hours (2010)",
+            "genres": "Adventure|Drama|Thriller",
+            "retrieval_rank": 24,
+            "distance": 0.6856997013092041
+          },
+          {
+            "movieId": 54286,
+            "title": "Bourne Ultimatum, The (2007)",
+            "genres": "Action|Crime|Thriller",
+            "retrieval_rank": 25,
+            "distance": 0.6868285834789276
+          }
+        ],
+        "timing": {
+          "hnsw_ms": 70.6,
           "rerank_ms": 1.6
-        },
-        "usage": {
-          "prompt_tokens": 0,
-          "completion_tokens": 0,
-          "cached": true
-        }
-      }
-    },
-    {
-      "request": {
-        "user_id": 96421,
-        "query": "dark crime drama with a great ending",
-        "top_k": 10
-      },
-      "response": {
-        "recommendations": [
-          {
-            "movieId": 50,
-            "title": "Usual Suspects, The (1995)",
-            "genres": "Crime|Mystery|Thriller",
-            "rerank_score": 25.0,
-            "retrieval_rank": 2,
-            "distance": 0.6607505679130554
-          },
-          {
-            "movieId": 55820,
-            "title": "No Country for Old Men (2007)",
-            "genres": "Crime|Drama",
-            "rerank_score": 24.0,
-            "retrieval_rank": 6,
-            "distance": 0.6679127812385559
-          },
-          {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
-            "rerank_score": 23.0,
-            "retrieval_rank": 8,
-            "distance": 0.6715783178806305
-          },
-          {
-            "movieId": 49530,
-            "title": "Blood Diamond (2006)",
-            "genres": "Action|Adventure|Crime|Drama|Thriller|War",
-            "rerank_score": 22.0,
-            "retrieval_rank": 13,
-            "distance": 0.6781643033027649
-          },
-          {
-            "movieId": 80489,
-            "title": "Town, The (2010)",
-            "genres": "Crime|Drama|Thriller",
-            "rerank_score": 21.0,
-            "retrieval_rank": 18,
-            "distance": 0.6831252574920654
-          },
-          {
-            "movieId": 48780,
-            "title": "Prestige, The (2006)",
-            "genres": "Drama|Mystery|Sci-Fi|Thriller",
-            "rerank_score": 20.0,
-            "retrieval_rank": 3,
-            "distance": 0.6622114479541779
-          },
-          {
-            "movieId": 63082,
-            "title": "Slumdog Millionaire (2008)",
-            "genres": "Crime|Drama|Romance",
-            "rerank_score": 19.0,
-            "retrieval_rank": 1,
-            "distance": 0.6532958447933197
-          },
-          {
-            "movieId": 59369,
-            "title": "Taken (2008)",
-            "genres": "Action|Crime|Drama|Thriller",
-            "rerank_score": 18.0,
-            "retrieval_rank": 23,
-            "distance": 0.6847666501998901
-          },
-          {
-            "movieId": 54286,
-            "title": "Bourne Ultimatum, The (2007)",
-            "genres": "Action|Crime|Thriller",
-            "rerank_score": 17.0,
-            "retrieval_rank": 25,
-            "distance": 0.6868285834789276
-          },
-          {
-            "movieId": 5418,
-            "title": "Bourne Identity, The (2002)",
-            "genres": "Action|Mystery|Thriller",
-            "rerank_score": 16.0,
-            "retrieval_rank": 20,
-            "distance": 0.6837476789951324
-          }
-        ],
-        "candidates": [
-          {
-            "movieId": 63082,
-            "title": "Slumdog Millionaire (2008)",
-            "genres": "Crime|Drama|Romance",
-            "retrieval_rank": 1,
-            "distance": 0.6532958447933197
-          },
-          {
-            "movieId": 50,
-            "title": "Usual Suspects, The (1995)",
-            "genres": "Crime|Mystery|Thriller",
-            "retrieval_rank": 2,
-            "distance": 0.6607505679130554
-          },
-          {
-            "movieId": 48780,
-            "title": "Prestige, The (2006)",
-            "genres": "Drama|Mystery|Sci-Fi|Thriller",
-            "retrieval_rank": 3,
-            "distance": 0.6622114479541779
-          },
-          {
-            "movieId": 2858,
-            "title": "American Beauty (1999)",
-            "genres": "Comedy|Drama",
-            "retrieval_rank": 4,
-            "distance": 0.6625431478023529
-          },
-          {
-            "movieId": 80463,
-            "title": "Social Network, The (2010)",
-            "genres": "Drama",
-            "retrieval_rank": 5,
-            "distance": 0.6637691259384155
-          },
-          {
-            "movieId": 55820,
-            "title": "No Country for Old Men (2007)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 6,
-            "distance": 0.6679127812385559
-          },
-          {
-            "movieId": 356,
-            "title": "Forrest Gump (1994)",
-            "genres": "Comedy|Drama|Romance|War",
-            "retrieval_rank": 7,
-            "distance": 0.6681075096130371
-          },
-          {
-            "movieId": 858,
-            "title": "Godfather, The (1972)",
-            "genres": "Crime|Drama",
-            "retrieval_rank": 8,
-            "distance": 0.6715783178806305
-          },
-          {
-            "movieId": 69757,
-            "title": "(500) Days of Summer (2009)",
-            "genres": "Comedy|Drama|Romance",
-            "retrieval_rank": 9,
-            "distance": 0.6725431680679321
-          },
-          {
-            "movieId": 527,
-            "title": "Schindler's List (1993)",
-            "genres": "Drama|War",
-            "retrieval_rank": 10,
-            "distance": 0.6744959652423859
-          },
-          {
-            "movieId": 69481,
-            "title": "Hurt Locker, The (2008)",
-            "genres": "Action|Drama|Thriller|War",
-            "retrieval_rank": 11,
-            "distance": 0.674604594707489
-          },
-          {
-            "movieId": 55247,
-            "title": "Into the Wild (2007)",
-            "genres": "Action|Adventure|Drama",
-            "retrieval_rank": 12,
-            "distance": 0.6759499311447144
-          },
-          {
-            "movieId": 49530,
-            "title": "Blood Diamond (2006)",
-            "genres": "Action|Adventure|Crime|Drama|Thriller|War",
-            "retrieval_rank": 13,
-            "distance": 0.6781643033027649
-          },
-          {
-            "movieId": 72998,
-            "title": "Avatar (2009)",
-            "genres": "Action|Adventure|Sci-Fi|IMAX",
-            "retrieval_rank": 14,
-            "distance": 0.6803029179573059
-          },
-          {
-            "movieId": 1704,
-            "title": "Good Will Hunting (1997)",
-            "genres": "Drama|Romance",
-            "retrieval_rank": 15,
-            "distance": 0.6803109049797058
-          },
-          {
-            "movieId": 69122,
-            "title": "Hangover, The (2009)",
-            "genres": "Comedy|Crime",
-            "retrieval_rank": 16,
-            "distance": 0.6821418404579163
-          },
-          {
-            "movieId": 70286,
-            "title": "District 9 (2009)",
-            "genres": "Mystery|Sci-Fi|Thriller",
-            "retrieval_rank": 17,
-            "distance": 0.6827405691146851
-          },
-          {
-            "movieId": 80489,
-            "title": "Town, The (2010)",
-            "genres": "Crime|Drama|Thriller",
-            "retrieval_rank": 18,
-            "distance": 0.6831252574920654
-          },
-          {
-            "movieId": 68954,
-            "title": "Up (2009)",
-            "genres": "Adventure|Animation|Children|Drama",
-            "retrieval_rank": 19,
-            "distance": 0.6834073066711426
-          },
-          {
-            "movieId": 5418,
-            "title": "Bourne Identity, The (2002)",
-            "genres": "Action|Mystery|Thriller",
-            "retrieval_rank": 20,
-            "distance": 0.6837476789951324
-          },
-          {
-            "movieId": 7153,
-            "title": "Lord of the Rings: The Return of the King, The (2003)",
-            "genres": "Action|Adventure|Drama|Fantasy",
-            "retrieval_rank": 21,
-            "distance": 0.6840827763080597
-          },
-          {
-            "movieId": 7361,
-            "title": "Eternal Sunshine of the Spotless Mind (2004)",
-            "genres": "Drama|Romance|Sci-Fi",
-            "retrieval_rank": 22,
-            "distance": 0.6842794418334961
-          },
-          {
-            "movieId": 59369,
-            "title": "Taken (2008)",
-            "genres": "Action|Crime|Drama|Thriller",
-            "retrieval_rank": 23,
-            "distance": 0.6847666501998901
-          },
-          {
-            "movieId": 81562,
-            "title": "127 Hours (2010)",
-            "genres": "Adventure|Drama|Thriller",
-            "retrieval_rank": 24,
-            "distance": 0.6856997013092041
-          },
-          {
-            "movieId": 54286,
-            "title": "Bourne Ultimatum, The (2007)",
-            "genres": "Action|Crime|Thriller",
-            "retrieval_rank": 25,
-            "distance": 0.6868285834789276
-          }
-        ],
-        "timing": {
-          "hnsw_ms": 80.9,
-          "rerank_ms": 0.5
         },
         "usage": {
           "prompt_tokens": 0,
@@ -4431,8 +4431,8 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 49.1,
-          "rerank_ms": 1.7
+          "hnsw_ms": 54.3,
+          "rerank_ms": 0.4
         },
         "usage": {
           "prompt_tokens": 0,
@@ -4715,13 +4715,13 @@
           }
         ],
         "timing": {
-          "hnsw_ms": 65.9,
-          "rerank_ms": 809.2
+          "hnsw_ms": 68.2,
+          "rerank_ms": 1.6
         },
         "usage": {
-          "prompt_tokens": 691,
-          "completion_tokens": 489,
-          "cached": false
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached": true
         }
       }
     }

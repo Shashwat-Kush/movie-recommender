@@ -51,7 +51,7 @@ function MovieCard({ movie, rank }: { movie: MovieRecommendation; rank: number }
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.06, duration: 0.25 }}
       whileHover={{ y: -3 }}
-      className="border-gradient glass glow-accent-hover flex flex-col overflow-hidden rounded-2xl transition-all"
+      className="spotlight border-gradient glass glow-accent-hover flex flex-col overflow-hidden rounded-2xl transition-all"
     >
       <div className="relative flex aspect-[2/3] items-end bg-[radial-gradient(circle_at_20%_15%,rgba(139,92,246,0.22),transparent_55%),radial-gradient(circle_at_85%_90%,rgba(99,102,241,0.14),transparent_50%)] p-4">
         <span className="glow-accent absolute left-3 top-3 rounded-md bg-bg/80 px-2 py-0.5 font-mono text-xs text-accent">

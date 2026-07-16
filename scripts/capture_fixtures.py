@@ -107,7 +107,7 @@ def main():
 
     centered = emb - emb.mean(axis=0)
     _, _, vt = np.linalg.svd(centered, full_matrices=False)
-    xy = centered @ vt[:2].T
+    xyz = centered @ vt[:3].T  # 3 components: the frontend renders a 3D galaxy
 
     # Keep the ~3000 most popular items for a legible scatter
     inv = {v: k for k, v in item_mapping.items()}
@@ -124,8 +124,9 @@ def main():
             "movieId": int(mid),
             "title": str(row["title"]),
             "genre": str(row["genres"]).split("|")[0],
-            "x": round(float(xy[i, 0]), 4),
-            "y": round(float(xy[i, 1]), 4),
+            "x": round(float(xyz[i, 0]), 4),
+            "y": round(float(xyz[i, 1]), 4),
+            "z": round(float(xyz[i, 2]), 4),
         })
     (FIXTURES / "projection.json").write_text(json.dumps(points))
     print(f"projection.json: {len(points)} points")

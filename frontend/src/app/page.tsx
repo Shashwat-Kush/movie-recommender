@@ -7,7 +7,39 @@ import { ArrowRight, Check, Cpu, Layers, Shuffle, Sparkles, UserRound } from "lu
 import Link from "next/link";
 import { coldScenarios, demoUsers, pickerMovies, recordedQueries, LIVE_MODE } from "@/lib/api";
 import { titleOnly } from "@/lib/format";
+import { genreColor } from "@/lib/colors";
 import { Tooltip } from "@/components/ui";
+
+/** Animated genre fingerprint: the demo user's real rating history as a
+ * segmented bar that morphs when the user changes. Data from users.json. */
+function TasteFingerprint({ dist }: { dist: Record<string, number> }) {
+  const entries = Object.entries(dist).slice(0, 6);
+  const total = entries.reduce((s, [, v]) => s + v, 0) || 1;
+  return (
+    <div className="mt-2">
+      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-border/40">
+        {entries.map(([g, v]) => (
+          <motion.span
+            key={g}
+            layout
+            animate={{ width: `${(v / total) * 100}%` }}
+            transition={{ type: "spring", stiffness: 160, damping: 24 }}
+            style={{ background: genreColor(g) }}
+            title={`${g} ${(v * 100).toFixed(0)}%`}
+          />
+        ))}
+      </div>
+      <div className="mt-1.5 flex flex-wrap justify-end gap-x-2.5 gap-y-0.5">
+        {entries.slice(0, 4).map(([g]) => (
+          <span key={g} className="flex items-center gap-1 text-[10px] text-text-faint">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: genreColor(g) }} />
+            {g}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /** Faint embedding-space dot field behind the hero (poster wall ships when the
  * TMDB enrichment artifact exists). Deterministic so SSR and client agree. */
@@ -107,11 +139,18 @@ function WarmSearch() {
         </div>
       </div>
 
-      <p className="mt-2 text-right font-mono text-[11px] text-text-faint">
-        {customUserId === null || customUserId === String(user.user_id)
-          ? `${user.num_ratings.toLocaleString()} ratings · top genres: ${Object.keys(user.genre_distribution).slice(0, 3).join(", ")}`
-          : "custom user — any of the 138,493 trained users works live"}
-      </p>
+      {customUserId === null || customUserId === String(user.user_id) ? (
+        <>
+          <p className="mt-2 text-right font-mono text-[11px] text-text-faint">
+            {user.num_ratings.toLocaleString()} ratings · taste fingerprint from real history
+          </p>
+          <TasteFingerprint dist={user.genre_distribution} />
+        </>
+      ) : (
+        <p className="mt-2 text-right font-mono text-[11px] text-text-faint">
+          custom user — any of the 138,493 trained users works live
+        </p>
+      )}
     </div>
   );
 }
@@ -300,7 +339,7 @@ export default function Home() {
           <motion.div key={title} whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
             <Link
               href={href}
-              className="border-gradient glass glow-accent-hover flex h-full flex-col gap-2 rounded-2xl p-5 transition-all"
+              className="spotlight border-gradient glass glow-accent-hover flex h-full flex-col gap-2 rounded-2xl p-5 transition-all"
             >
               <span className="glow-accent flex h-8 w-8 items-center justify-center rounded-lg bg-accent-faint">
                 <Icon size={16} className="text-accent" />
