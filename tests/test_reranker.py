@@ -1,4 +1,4 @@
-"""Unit tests for GroqReranker._parse_response (no network, no API key)."""
+"""Unit tests for LLMReranker._parse_response (no network, no API key)."""
 import sys
 from pathlib import Path
 
@@ -6,12 +6,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.models.reranker import GroqReranker
+from src.models.reranker import LLMReranker
 
 
 @pytest.fixture
 def reranker():
-    return GroqReranker(api_key="test-key-not-used", cache_dir=None)
+    return LLMReranker(api_key="test-key-not-used", cache_dir=None)
 
 
 def test_json_object_ranking(reranker):

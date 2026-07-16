@@ -81,7 +81,7 @@ export function RankFlow({ response }: { response: RecommendResponse }) {
       {/* Right: after LLM rerank */}
       <div>
         <h3 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-text-faint">
-          <Tooltip label="Final order after Groq llama-3.1-8b-instant ranked the 25 candidates against your query.">
+          <Tooltip label="Final order after Cerebras gpt-oss-120b ranked the 25 candidates against your query.">
             after LLM rerank
           </Tooltip>{" "}
           · {recommendations.length}

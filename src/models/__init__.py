@@ -3,7 +3,7 @@
 from src.models.matrix_factorization import MatrixFactorization, ImplicitMF
 from src.models.trainer import MFTrainer, MFDataset, create_dataloader, train_mf, load_config
 from src.models.two_tower import TwoTower, TwoTowerWithMetadata, MLP
-from src.models.reranker import GroqReranker, create_reranker
+from src.models.reranker import LLMReranker, create_reranker
 
 __all__ = [
     "MatrixFactorization",
@@ -16,6 +16,6 @@ __all__ = [
     "create_dataloader",
     "train_mf",
     "load_config",
-    "GroqReranker",
+    "LLMReranker",
     "create_reranker",
 ]

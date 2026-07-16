@@ -103,7 +103,7 @@ function Footer() {
           </a>
         </div>
         <p className="font-mono">
-          PyTorch two-tower · custom C++ HNSW · Groq llama-3.1-8b-instant · FastAPI · Next.js
+          PyTorch two-tower · custom C++ HNSW · Cerebras gpt-oss-120b · FastAPI · Next.js
         </p>
       </div>
     </footer>

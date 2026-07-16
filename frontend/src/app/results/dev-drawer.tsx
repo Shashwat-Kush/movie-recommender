@@ -34,17 +34,17 @@ export function DevDrawer({ response }: { response: RecommendResponse }) {
             <MonoStat
               label="rerank"
               value={fmtMs(timing.rerank_ms)}
-              tooltip="Wall-clock time of the Groq llama-3.1-8b-instant rerank call, including network."
+              tooltip="Wall-clock time of the Cerebras gpt-oss-120b rerank call, including network."
             />
             <MonoStat
               label="prompt tokens"
               value={usage ? (usage.cached ? "0 (cached)" : usage.prompt_tokens.toLocaleString()) : <AwaitingBackendBadge />}
-              tooltip="Groq-reported prompt tokens for the rerank call. 0 when served from the on-disk response cache."
+              tooltip="Cerebras-reported prompt tokens for the rerank call. 0 when served from the on-disk response cache."
             />
             <MonoStat
               label="completion tokens"
               value={usage ? (usage.cached ? "0 (cached)" : usage.completion_tokens.toLocaleString()) : <AwaitingBackendBadge />}
-              tooltip="Groq-reported completion tokens for the rerank call."
+              tooltip="Cerebras-reported completion tokens for the rerank call."
             />
           </div>
 

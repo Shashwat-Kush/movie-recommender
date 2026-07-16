@@ -7,8 +7,8 @@ pandas
 pyarrow
 pyyaml
 
-# Groq API
-groq
+# Cerebras API (reranker)
+cerebras_cloud_sdk
 python-dotenv
 
 # C++ bindings (built locally)

@@ -57,7 +57,7 @@
       "ef_construction": 200,
       "ef_search": 100
     },
-    "reranker_model": "llama-3.1-8b-instant",
+    "reranker_model": "gpt-oss-120b",
     "candidate_pool": 500,
     "rerank_candidates": 25
   }

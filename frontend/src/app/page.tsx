@@ -228,7 +228,7 @@ const FEATURES = [
   {
     icon: Sparkles,
     title: "LLM Reranking",
-    body: "Groq llama-3.1-8b-instant reorders the top 25 candidates against your natural-language query.",
+    body: "Cerebras gpt-oss-120b reorders the top 25 candidates against your natural-language query.",
     href: "/lab#pipeline",
   },
 ];

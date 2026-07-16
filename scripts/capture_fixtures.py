@@ -144,7 +144,7 @@ def main():
             "ratings_trained": "25M MovieLens ratings",
             "embedding_dim": 128,
             "hnsw": {"M": 32, "ef_construction": 200, "ef_search": 100},
-            "reranker_model": "llama-3.1-8b-instant",
+            "reranker_model": "gpt-oss-120b",
             "candidate_pool": 500,
             "rerank_candidates": 25,
         },

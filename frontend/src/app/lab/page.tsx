@@ -16,7 +16,7 @@ function PipelineDiagram() {
     { title: "User embedding", detail: "history tower MLP → 128-dim, L2-normalized" },
     { title: "C++ HNSW search", detail: "26,744 movies · top 500 candidates" },
     { title: "Filter + trim", detail: "drop already-seen → top 25" },
-    { title: "LLM rerank", detail: "query + candidates → llama-3.1-8b-instant" },
+    { title: "LLM rerank", detail: "query + candidates → gpt-oss-120b" },
     { title: "Top-k results", detail: "personalized retrieval, query-guided reranking" },
   ];
   return (

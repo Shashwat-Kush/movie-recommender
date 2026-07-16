@@ -16,7 +16,7 @@ import pyarrow.parquet as pq
 import pandas as pd
 import pandas as pd
 
-from src.models.reranker import GroqReranker, create_reranker
+from src.models.reranker import LLMReranker, create_reranker
 # Constructs the right model class (ID-based or history-based) from checkpoint config.
 from scripts.evaluate import load_model as load_two_tower_checkpoint
 
@@ -273,7 +273,7 @@ def main():
     movies_meta = load_movie_metadata(Path(args.movies_parquet), candidate_movie_ids)
     print(f"  Loaded metadata for {len(movies_meta)} movies")
 
-    print("Initializing Groq reranker...")
+    print("Initializing Cerebras reranker...")
     reranker_config = load_reranker_config(args.reranker_config)
     reranker = create_reranker(reranker_config)
 

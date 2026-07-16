@@ -1,7 +1,7 @@
 # movie-recommender
 
 A MovieLens 25M recommendation engine built to run on an 8GB M2 Mac: streaming data
-pipeline → Two-Tower retrieval (PyTorch/MPS) → custom C++ HNSW index → Groq LLM reranking,
+pipeline → Two-Tower retrieval (PyTorch/MPS) → custom C++ HNSW index → Cerebras LLM reranking,
 served over FastAPI.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
@@ -61,7 +61,7 @@ recent windows over the plain mean (9.10% → 9.40%, 8.28% → 8.50%). (The LOO 
 trains on all periods, so this measures robustness to recency, not strict train-on-past
 generalization.)
 
-**Reranker A/B** (`scripts/evaluate_reranker.py`, 200 users) — Groq reranking of the
+**Reranker A/B** (`scripts/evaluate_reranker.py`, 200 users) — LLM reranking (now Cerebras gpt-oss-120b; the A/B ran on Groq llama-3.1-8b) of the
 retrieval top candidates moves recall@10 from 7.0% to 7.5% and NDCG from 3.88 to 4.22:
 a small lift, within noise at this sample size.
 
@@ -80,7 +80,7 @@ raw CSVs ──▶ partitioned Parquet ──▶ train/val/test splits
                                           ▼
                               C++ HNSW index (top-K)
                                           ▼
-                            Groq Llama-3 reranker (top-N)
+                            Cerebras LLM reranker (top-N)
                                           ▼
                                   FastAPI /recommend
 ```
@@ -90,8 +90,8 @@ raw CSVs ──▶ partitioned Parquet ──▶ train/val/test splits
 ```bash
 pip install -r requirements.txt
 
-# Groq API key for the reranker
-echo 'GROQ_API_KEY=your_key_here' > .env
+# Cerebras API key for the reranker
+echo 'CEREBRAS_API_KEY=your_key_here' > .env
 
 # Build the C++ retrieval engine
 cd cpp && ./build.sh && cd ..
@@ -121,7 +121,7 @@ PYTHONPATH=. python3 scripts/build_index.py --checkpoint checkpoints/two_tower_h
 PYTHONPATH=. python3 scripts/evaluate.py --checkpoint checkpoints/two_tower_history/best_model.pt
 PYTHONPATH=. python3 scripts/evaluate_timesplit.py     # recall by time period
 PYTHONPATH=. python3 scripts/evaluate_cold_start.py    # pseudo-cold item protocol
-PYTHONPATH=. python3 scripts/evaluate_reranker.py      # retrieval vs Groq-reranked A/B
+PYTHONPATH=. python3 scripts/evaluate_reranker.py      # retrieval vs LLM-reranked A/B
 PYTHONPATH=. python3 scripts/evaluate_mf.py            # BPR baseline
 
 # 6. Serve
@@ -196,10 +196,10 @@ from the scripts above.
 - `popularity_weight` in `configs/retrieval.yaml` is 0 for the served logQ-corrected model
   (any blend makes it worse); set it to ~0.1 only for checkpoints trained without
   `logq_correction`.
-- The Groq reranker is token-frugal (free tier is 500K tokens/day): 25 candidates,
+- The reranker is token-frugal: 25 candidates,
   title+genres only, compact index-list output capped at 512 tokens, responses disk-cached
   by prompt hash (`outputs/reranker_cache/`), and 429s retried with exponential backoff. It
-  falls back to retrieval order if Groq still fails.
+  falls back to retrieval order if the LLM API still fails.
 - Matrix Factorization exists as a baseline but nothing in the serving path uses it.
 - Unit tests (`PYTHONPATH=. python3 -m pytest tests/ -q`) cover metadata alignment,
   history pooling/exclusion/ID-dropout semantics, and reranker response parsing.

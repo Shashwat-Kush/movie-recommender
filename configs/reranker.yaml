@@ -1,6 +1,8 @@
-model: "llama-3.1-8b-instant"
-# Tokens are the scarce resource (Groq free tier: 500K/day). 25 candidates,
-# title+genres only, compact index-list output, disk cache, 429 backoff.
+# Cerebras reranker. Tokens are the scarce resource on free tiers: 25
+# candidates, title+genres only, compact index-list output, disk cache,
+# 429 backoff. gpt-oss-120b is a reasoning model — max_tokens is set in
+# code (2048) to leave room for reasoning before the JSON.
+model: "gpt-oss-120b"
 max_candidates_per_request: 25
 cache_dir: "outputs/reranker_cache"
 max_retries: 4

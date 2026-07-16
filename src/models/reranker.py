@@ -1,4 +1,4 @@
-"""Groq LLM Reranker for movie recommendations."""
+"""Cerebras LLM Reranker for movie recommendations."""
 
 import hashlib
 import os
@@ -8,43 +8,47 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from groq import Groq
+from cerebras.cloud.sdk import Cerebras
 
 
-class GroqReranker:
-    """Reranks movie candidates using Groq's Llama-3-8B model."""
+class LLMReranker:
+    """Reranks movie candidates using an LLM served by Cerebras."""
 
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "llama-3.1-8b-instant",
+        model: str = "gpt-oss-120b",
         max_candidates_per_request: int = 25,
         cache_dir: Optional[str] = "outputs/reranker_cache",
         max_retries: int = 4,
     ):
         """
-        Initialize the Groq reranker.
+        Initialize the Cerebras reranker.
 
         Args:
-            api_key: Groq API key. If None, reads from GROQ_API_KEY env var.
+            api_key: Cerebras API key. If None, reads from CEREBRAS_API_KEY env var.
             model: Model name to use
             max_candidates_per_request: Max movies per API call. Tokens are the
-                scarce resource (Groq free tier is 500K/day): the tail of a long
-                candidate list is not where reranking earns anything.
+                scarce resource on free tiers: the tail of a long candidate list
+                is not where reranking earns anything.
             cache_dir: Disk cache for responses keyed by prompt hash — re-running
                 the same comparison (temperature 0.1 is near-deterministic) costs
                 zero tokens. None disables.
             max_retries: Exponential-backoff attempts on rate limits (429).
         """
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.api_key = api_key or os.getenv("CEREBRAS_API_KEY")
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY not set and no api_key provided")
+            raise ValueError("CEREBRAS_API_KEY not set and no api_key provided")
 
-        self.client = Groq(api_key=self.api_key)
+        self.client = Cerebras(api_key=self.api_key)
         self.model = model
         self.max_candidates_per_request = max_candidates_per_request
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.max_retries = max_retries
+        # gpt-oss-120b is a reasoning model: it may reject json_object mode or
+        # spend tokens reasoning before the JSON. Downgrade gracefully once.
+        self._json_mode = True
+        self._reasoning_effort: Optional[str] = "low"
         # Token usage of the most recent rerank() call ({"prompt_tokens",
         # "completion_tokens", "cached"}); None until the first call.
         self.last_usage = None
@@ -124,7 +128,7 @@ indices (0-based), best first. No prose, JSON only."""
 
         for attempt in range(self.max_retries + 1):
             try:
-                response = self.client.chat.completions.create(
+                kwargs: Dict[str, Any] = dict(
                     model=self.model,
                     messages=[
                         {
@@ -134,9 +138,31 @@ indices (0-based), best first. No prose, JSON only."""
                         {"role": "user", "content": prompt},
                     ],
                     temperature=0.1,
-                    max_tokens=512,
-                    response_format={"type": "json_object"},
+                    # Reasoning models spend tokens thinking before the JSON; keep
+                    # the ceiling high and the reasoning effort low so the ranking
+                    # itself never gets truncated away.
+                    max_tokens=4096,
                 )
+                if self._reasoning_effort:
+                    kwargs["reasoning_effort"] = self._reasoning_effort
+                if self._json_mode:
+                    kwargs["response_format"] = {"type": "json_object"}
+                try:
+                    response = self.client.chat.completions.create(**kwargs)
+                except Exception as e:
+                    msg = str(e)
+                    if self._json_mode and "response_format" in msg:
+                        print("Note: model rejected json_object mode; retrying without")
+                        self._json_mode = False
+                        kwargs.pop("response_format")
+                        response = self.client.chat.completions.create(**kwargs)
+                    elif self._reasoning_effort and "reasoning_effort" in msg:
+                        print("Note: model rejected reasoning_effort; retrying without")
+                        self._reasoning_effort = None
+                        kwargs.pop("reasoning_effort")
+                        response = self.client.chat.completions.create(**kwargs)
+                    else:
+                        raise
                 response_text = response.choices[0].message.content or ""
                 if response.usage is not None:
                     self.last_usage = {
@@ -154,10 +180,10 @@ indices (0-based), best first. No prose, JSON only."""
                 is_rate_limit = "429" in str(e) or "rate_limit" in str(e)
                 if is_rate_limit and attempt < self.max_retries:
                     delay = 5 * 2**attempt
-                    print(f"Groq rate limit, backing off {delay}s (attempt {attempt + 1}/{self.max_retries})")
+                    print(f"Cerebras rate limit, backing off {delay}s (attempt {attempt + 1}/{self.max_retries})")
                     time.sleep(delay)
                     continue
-                print(f"Error calling Groq API: {e}")
+                print(f"Error calling Cerebras API: {e}")
                 return []
         return []
 
@@ -214,13 +240,13 @@ indices (0-based), best first. No prose, JSON only."""
         return all_results[:top_k]
 
 
-def create_reranker(config: Optional[Dict[str, Any]] = None) -> GroqReranker:
+def create_reranker(config: Optional[Dict[str, Any]] = None) -> LLMReranker:
     """Factory function to create reranker from config."""
     if config is None:
         config = {}
-    return GroqReranker(
+    return LLMReranker(
         api_key=config.get("api_key"),
-        model=config.get("model", "llama-3.1-8b-instant"),
+        model=config.get("model", "gpt-oss-120b"),
         max_candidates_per_request=config.get("max_candidates_per_request", 25),
         cache_dir=config.get("cache_dir", "outputs/reranker_cache"),
         max_retries=config.get("max_retries", 4),

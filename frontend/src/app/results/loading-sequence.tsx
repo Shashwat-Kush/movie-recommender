@@ -11,7 +11,7 @@ const STEPS = [
   { label: "Loading your taste profile", detail: "history → 128-dim user embedding", ms: 150 },
   { label: "Searching C++ HNSW index", detail: "26,744 movies · M=32 · ef_search=100", ms: 200 },
   { label: "Retrieved 500 candidates", detail: "seen-filtered → top 25", ms: 250 },
-  { label: "Reranking against your query", detail: "Groq llama-3.1-8b-instant", ms: Infinity },
+  { label: "Reranking against your query", detail: "Cerebras gpt-oss-120b", ms: Infinity },
   { label: "Done", detail: "", ms: Infinity },
 ] as const;
 

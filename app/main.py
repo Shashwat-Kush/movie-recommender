@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from src.models.reranker import GroqReranker, create_reranker
+from src.models.reranker import LLMReranker, create_reranker
 
 
 app = FastAPI(title="Movie Recommender API", version="1.0.0")
