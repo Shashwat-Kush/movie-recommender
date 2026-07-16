@@ -1,0 +1,19 @@
+# Implicit MF (BPR) baseline on the LOO split — fair comparison against Two-Tower.
+# Few epochs on purpose: this is a baseline, not a contender.
+embedding_dim: 128
+use_bias: false
+sparse_embeddings: false
+
+batch_size: 1024
+accum_steps: 4
+lr: 0.001
+weight_decay: 1.0e-5
+max_epochs: 3
+grad_clip: 1.0
+
+use_fp16: true
+checkpoint_dir: "checkpoints/mf_implicit_loo"
+
+num_workers: 0
+pin_memory: false
+log_interval: 500

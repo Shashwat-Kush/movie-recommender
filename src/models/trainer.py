@@ -110,14 +110,15 @@ class MFTrainer:
     def train_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         """Single training step with FP16 and gradient accumulation."""
         user_ids = batch["user_ids"].to(self.device, non_blocking=True)
-        item_ids = batch["item_ids"].to(self.device, non_blocking=True)
 
         if "ratings" in batch:
+            item_ids = batch["item_ids"].to(self.device, non_blocking=True)
             ratings = batch["ratings"].to(self.device, non_blocking=True)
             with autocast("mps", dtype=torch.float16, enabled=self.use_fp16):
                 preds = self.model(user_ids, item_ids)
                 loss = F.mse_loss(preds, ratings)
         else:
+            item_ids = None  # implicit batches carry pos/neg item ids instead
             pos_item_ids = batch["pos_item_ids"].to(self.device, non_blocking=True)
             neg_item_ids = batch["neg_item_ids"].to(self.device, non_blocking=True)
             with autocast("mps", dtype=torch.float16, enabled=self.use_fp16):
@@ -134,12 +135,14 @@ class MFTrainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
             self.scaler.step(self.optimizer)
             self.scaler.update()
-            self.optimizer.zero_grad(set_to_none=True)
+            # set_to_none=False keeps the ~70MB embedding grad buffers allocated;
+            # re-requesting them from the Metal driver every step OOMs on 8GB when
+            # other apps hold unified memory near the working-set cap. Periodic
+            # cleanup runs every 100 batches in train_epoch instead of per step.
+            self.optimizer.zero_grad(set_to_none=False)
 
         detached_loss = loss.detach() * self.accum_steps
         del batch, user_ids, item_ids, loss
-        torch.mps.empty_cache()
-        gc.collect()
 
         return detached_loss
 
@@ -180,7 +183,12 @@ class MFTrainer:
             ratings = batch["ratings"].to(self.device, non_blocking=True)
 
             with autocast("mps", dtype=torch.float16, enabled=self.use_fp16):
-                preds = self.model(user_ids, item_ids)
+                # ImplicitMF.forward computes BPR loss over triples; its pairwise
+                # scorer is predict(). Explicit MF scores directly via forward.
+                if hasattr(self.model, "predict"):
+                    preds = self.model.predict(user_ids, item_ids)
+                else:
+                    preds = self.model(user_ids, item_ids)
                 loss = F.mse_loss(preds, ratings)
 
             total_loss += loss.item()

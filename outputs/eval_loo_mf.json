@@ -1,0 +1,11 @@
+{
+  "protocol": "leave_one_out",
+  "checkpoint": "checkpoints/mf_implicit_loo/epoch_2.pt",
+  "metrics": {
+    "recall@10": 0.06449423436563581,
+    "ndcg@10": 0.03307170768795676,
+    "popularity_recall@10": 0.04857285205750471,
+    "popularity_ndcg@10": 0.024835253775419456,
+    "num_users_evaluated": 138493
+  }
+}
