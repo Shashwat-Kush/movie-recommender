@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0a0a0c;
+  --card: #151518;
+  --card-hover: #1a1a1f;
+  --border: #26262b;
+  --border-strong: #3a3a42;
+  --text: #ededf0;
+  --text-dim: #a1a1ab;
+  --text-faint: #62626c;
+  --accent: #8b5cf6;
+  --accent-dim: #7c4fe0;
+  --accent-faint: rgba(139, 92, 246, 0.12);
+  --success: #34d399;
+  --error: #f87171;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-faint: var(--accent-faint);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-faint);
+}
+
+/* Reduced motion: kill transitions app-wide when the setting (or OS pref) is on */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+[data-reduce-motion="true"] *, [data-reduce-motion="true"] *::before, [data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Thin scrollbars for the dev drawer's JSON block */
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }

@@ -1,0 +1,157 @@
+[
+  {
+    "user_id": 1,
+    "num_ratings": 173,
+    "num_liked": 159,
+    "genre_distribution": {
+      "Adventure": 0.1319,
+      "Fantasy": 0.1319,
+      "Action": 0.1191,
+      "Horror": 0.0915,
+      "Drama": 0.0872,
+      "Thriller": 0.0872,
+      "Comedy": 0.083,
+      "Sci-Fi": 0.0766
+    },
+    "decade_distribution": {
+      "1920": 0.0063,
+      "1930": 0.0252,
+      "1940": 0.0063,
+      "1950": 0.0126,
+      "1960": 0.0566,
+      "1970": 0.1132,
+      "1980": 0.3082,
+      "1990": 0.2704,
+      "2000": 0.2013
+    },
+    "recent_liked_titles": [
+      "Godsend (2004)",
+      "Heavy Metal 2000 (2000)",
+      "Highlander: Endgame (Highlander IV) (2000)",
+      "Toys (1992)",
+      "Van Helsing (2004)"
+    ]
+  },
+  {
+    "user_id": 42,
+    "num_ratings": 49,
+    "num_liked": 44,
+    "genre_distribution": {
+      "Drama": 0.1667,
+      "Action": 0.1404,
+      "Thriller": 0.1316,
+      "Crime": 0.114,
+      "Comedy": 0.0965,
+      "Adventure": 0.0789,
+      "Sci-Fi": 0.0614,
+      "Mystery": 0.0614
+    },
+    "decade_distribution": {
+      "1940": 0.0227,
+      "1950": 0.1364,
+      "1960": 0.1136,
+      "1970": 0.0909,
+      "1980": 0.0909,
+      "1990": 0.3636,
+      "2000": 0.1818
+    },
+    "recent_liked_titles": [
+      "Eternal Sunshine of the Spotless Mind (2004)",
+      "Taxi Driver (1976)",
+      "Manchurian Candidate, The (1962)",
+      "Good, the Bad and the Ugly, The (Buono, il brutto, il cattivo, Il) (1966)",
+      "Hustler, The (1961)"
+    ]
+  },
+  {
+    "user_id": 7,
+    "num_ratings": 274,
+    "num_liked": 108,
+    "genre_distribution": {
+      "Drama": 0.1695,
+      "Comedy": 0.1525,
+      "Romance": 0.1119,
+      "Sci-Fi": 0.1051,
+      "Action": 0.1017,
+      "Adventure": 0.1017,
+      "Thriller": 0.061,
+      "Fantasy": 0.0339
+    },
+    "decade_distribution": {
+      "1930": 0.037,
+      "1940": 0.0278,
+      "1950": 0.0648,
+      "1960": 0.0926,
+      "1970": 0.0741,
+      "1980": 0.2037,
+      "1990": 0.3056,
+      "2000": 0.1944
+    },
+    "recent_liked_titles": [
+      "Sixth Sense, The (1999)",
+      "Patriot, The (2000)",
+      "Return to Me (2000)",
+      "Little Voice (1998)",
+      "Gladiator (2000)"
+    ]
+  },
+  {
+    "user_id": 33844,
+    "num_ratings": 103,
+    "num_liked": 87,
+    "genre_distribution": {
+      "Drama": 0.2451,
+      "Thriller": 0.1324,
+      "Crime": 0.1225,
+      "Comedy": 0.1176,
+      "Action": 0.0637,
+      "Mystery": 0.0539,
+      "Romance": 0.0539,
+      "Sci-Fi": 0.049
+    },
+    "decade_distribution": {
+      "1960": 0.0115,
+      "1970": 0.0575,
+      "1980": 0.1724,
+      "1990": 0.4253,
+      "2000": 0.3333
+    },
+    "recent_liked_titles": [
+      "Office Space (1999)",
+      "Pianist, The (2002)",
+      "L.A. Confidential (1997)",
+      "Amelie (Fabuleux destin d'Am\u00e9lie Poulain, Le) (2001)",
+      "Donnie Brasco (1997)"
+    ]
+  },
+  {
+    "user_id": 96421,
+    "num_ratings": 102,
+    "num_liked": 82,
+    "genre_distribution": {
+      "Drama": 0.2603,
+      "Thriller": 0.1461,
+      "Crime": 0.1187,
+      "Comedy": 0.0868,
+      "Action": 0.0731,
+      "Mystery": 0.0594,
+      "Sci-Fi": 0.0457,
+      "Adventure": 0.0457
+    },
+    "decade_distribution": {
+      "1960": 0.0122,
+      "1970": 0.0122,
+      "1980": 0.0366,
+      "1990": 0.3049,
+      "2000": 0.439,
+      "2010": 0.1951
+    },
+    "recent_liked_titles": [
+      "True Grit (1969)",
+      "True Grit (2010)",
+      "Limitless (2011)",
+      "Sweeney Todd: The Demon Barber of Fleet Street (2007)",
+      "Guard, The (2011)"
+    ]
+  }
+]

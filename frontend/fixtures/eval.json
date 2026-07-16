@@ -1,0 +1,64 @@
+{
+  "loo": {
+    "recall@10": 0.09504451488522886,
+    "ndcg@10": 0.047222313030944166,
+    "popularity_recall@10": 0.04857285205750471,
+    "popularity_ndcg@10": 0.024835253775419456,
+    "num_users_evaluated": 138493,
+    "popularity_weight": 0.0
+  },
+  "cold_start": {
+    "cold": {
+      "recall@10": 0.08886163071995638,
+      "ndcg@10": 0.044724741648342566,
+      "popularity_recall@10": 0.07209785682646769,
+      "popularity_ndcg@10": 0.037377711280817745,
+      "num_users_evaluated": 29349
+    },
+    "warm": {
+      "recall@10": 0.10341067838767931,
+      "ndcg@10": 0.05349675378005079,
+      "popularity_recall@10": 0.07209785682646769,
+      "popularity_ndcg@10": 0.037377711280817745,
+      "num_users_evaluated": 29349
+    },
+    "cold_frac": 0.2
+  },
+  "timesplit": {
+    "train_window (<2009-01-01)": {
+      "recall@10": 0.09715651415865927,
+      "ndcg@10": 0.047670924706998984,
+      "popularity_recall@10": 0.049004339180942866,
+      "popularity_ndcg@10": 0.024639158384089328,
+      "num_users_evaluated": 102093
+    },
+    "val_window (2009-01-01..2012-01-01)": {
+      "recall@10": 0.09396855759459621,
+      "ndcg@10": 0.048837693735329986,
+      "popularity_recall@10": 0.05338035746308805,
+      "popularity_ndcg@10": 0.028333193036463207,
+      "num_users_evaluated": 16729
+    },
+    "test_window (2012-01-01..2015-12-31)": {
+      "recall@10": 0.08499822073102536,
+      "ndcg@10": 0.04352022286535327,
+      "popularity_recall@10": 0.0422449290834223,
+      "popularity_ndcg@10": 0.022878207407117747,
+      "num_users_evaluated": 19671
+    }
+  },
+  "system": {
+    "movies_indexed": 26744,
+    "users_trained": 138493,
+    "ratings_trained": "25M MovieLens ratings",
+    "embedding_dim": 128,
+    "hnsw": {
+      "M": 32,
+      "ef_construction": 200,
+      "ef_search": 100
+    },
+    "reranker_model": "llama-3.1-8b-instant",
+    "candidate_pool": 500,
+    "rerank_candidates": 25
+  }
+}
