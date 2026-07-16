@@ -253,6 +253,12 @@ class TwoTowerHistory(nn.Module):
         item_features = torch.cat([self.item_embedding(item_ids), item_metadata], dim=1)
         return F.normalize(self.item_tower(item_features), p=2, dim=1)
 
+    def get_item_embeddings_cold(self, item_metadata: torch.Tensor) -> torch.Tensor:
+        """Get embeddings for cold-start items (no ID embedding)."""
+        zero_emb = torch.zeros(item_metadata.size(0), self.embedding_dim, device=item_metadata.device)
+        item_features = torch.cat([zero_emb, item_metadata], dim=1)
+        return F.normalize(self.item_tower(item_features), p=2, dim=1)
+
     def forward(
         self,
         user_ids: torch.Tensor,
