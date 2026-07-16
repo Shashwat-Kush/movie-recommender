@@ -14,6 +14,9 @@ two_tower:
   temperature: 0.05   # divides cosine scores into logit range for in-batch softmax
   min_rating: 3.5     # ratings below this are not treated as positives
   history_k: 20       # two_tower_history: pool the user's K most recent liked movies
+  history_decay: 0.9  # recency weight decay**position over history (1.0 = plain mean)
+  id_dropout: 0.2     # zero the item-ID embedding for this fraction during training so
+                      # the metadata-only cold path works at serving time
   logq_correction: true  # debias in-batch negatives so raw cosine ranks by likelihood
                          # (makes the serving-time popularity blend unnecessary)
 
@@ -42,8 +45,9 @@ early_stopping:
 # MPS memory management
 use_fp16: true
 
-# Checkpointing
-checkpoint_dir: "checkpoints/two_tower"
+# Checkpointing (v2 = id_dropout + history_decay run; v1 without them lives in
+# checkpoints/two_tower_history and keeps serving until v2 proves out)
+checkpoint_dir: "checkpoints/two_tower_history_v2"
 
 # Data
 num_workers: 0

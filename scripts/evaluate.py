@@ -42,6 +42,8 @@ def load_model(checkpoint_path: Path, device: torch.device):
             hidden_dim=hidden_dim,
             output_dim=output_dim,
             dropout=dropout,
+            id_dropout=ckpt_config.get("id_dropout") or 0.0,
+            history_decay=ckpt_config.get("history_decay") or 1.0,
         )
     else:
         n_users = ckpt_config.get("n_users") or state_dict.get("user_embedding.weight", torch.empty(0)).shape[0]

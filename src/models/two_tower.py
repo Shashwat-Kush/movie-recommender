@@ -203,12 +203,22 @@ class TwoTowerHistory(nn.Module):
         hidden_dim: int = 256,
         output_dim: int = 128,
         dropout: float = 0.1,
+        id_dropout: float = 0.0,
+        history_decay: float = 1.0,
     ):
         super().__init__()
         self.n_items = n_items
         self.metadata_dim = metadata_dim
         self.embedding_dim = embedding_dim
         self.output_dim = output_dim
+        # Fraction of items whose ID embedding is zeroed during training so the item
+        # tower learns to work from metadata alone — without it the cold path
+        # (get_item_embeddings_cold) is out-of-distribution and useless (measured
+        # 0.13% vs 10.56% warm recall@10).
+        self.id_dropout = id_dropout
+        # Recency weight for history pooling: position j (most recent first) gets
+        # decay**j. 1.0 is a plain mean.
+        self.history_decay = history_decay
 
         self.item_embedding = nn.Embedding(n_items, embedding_dim)
         nn.init.normal_(self.item_embedding.weight, std=0.01)
@@ -223,7 +233,8 @@ class TwoTowerHistory(nn.Module):
         user_ids: torch.Tensor,
         exclude_items: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Mean of history item embeddings; -1 pads (and the excluded item) masked out.
+        """Recency-weighted mean of history item embeddings; -1 pads (and the
+        excluded item) masked out.
 
         exclude_items drops the current training positive from its own user's history
         so the model can't answer by reading the label off its input.
@@ -232,8 +243,14 @@ class TwoTowerHistory(nn.Module):
         mask = hist >= 0
         if exclude_items is not None:
             mask &= hist != exclude_items.unsqueeze(1)
-        emb = self.item_embedding(hist.clamp(min=0)) * mask.unsqueeze(-1)
-        return emb.sum(dim=1) / mask.sum(dim=1, keepdim=True).clamp(min=1)
+
+        weights = mask.float()
+        if self.history_decay != 1.0:
+            decay = self.history_decay ** torch.arange(hist.size(1), device=hist.device, dtype=torch.float32)
+            weights = weights * decay
+
+        emb = self.item_embedding(hist.clamp(min=0)) * weights.unsqueeze(-1)
+        return emb.sum(dim=1) / weights.sum(dim=1, keepdim=True).clamp(min=1e-8)
 
     def get_user_embeddings(
         self,
@@ -249,8 +266,17 @@ class TwoTowerHistory(nn.Module):
         item_ids: torch.Tensor,
         item_metadata: torch.Tensor,
     ) -> torch.Tensor:
-        """L2-normalized item embeddings from IDs and metadata."""
-        item_features = torch.cat([self.item_embedding(item_ids), item_metadata], dim=1)
+        """L2-normalized item embeddings from IDs and metadata.
+
+        During training, id_dropout zeroes the ID embedding for a random fraction of
+        the batch — exactly the cold-path input — so metadata-only items get real
+        embeddings at serving time. Inactive under model.eval().
+        """
+        id_emb = self.item_embedding(item_ids)
+        if self.training and self.id_dropout > 0:
+            keep = (torch.rand(id_emb.size(0), 1, device=id_emb.device) >= self.id_dropout).float()
+            id_emb = id_emb * keep
+        item_features = torch.cat([id_emb, item_metadata], dim=1)
         return F.normalize(self.item_tower(item_features), p=2, dim=1)
 
     def get_item_embeddings_cold(self, item_metadata: torch.Tensor) -> torch.Tensor:

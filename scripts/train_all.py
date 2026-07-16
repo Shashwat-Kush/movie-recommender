@@ -567,6 +567,8 @@ def train_two_tower(args, data_config, model_config):
             hidden_dim=tt_config.get("hidden_dim", 256),
             output_dim=tt_config.get("output_dim", 128),
             dropout=tt_config.get("dropout", 0.1),
+            id_dropout=tt_config.get("id_dropout", 0.0),
+            history_decay=tt_config.get("history_decay", 1.0),
         )
         default_ckpt_dir = "checkpoints/two_tower_history"
     else:
@@ -610,6 +612,8 @@ def train_two_tower(args, data_config, model_config):
         # Model architecture params saved in checkpoint for evaluate.py / build_index.py
         "model_type": "two_tower_history" if history_based else "two_tower",
         "history_k": tt_config.get("history_k", 20) if history_based else None,
+        "id_dropout": tt_config.get("id_dropout", 0.0) if history_based else None,
+        "history_decay": tt_config.get("history_decay", 1.0) if history_based else None,
         "n_users": n_users,
         "n_items": n_items,
         "metadata_dim": metadata_dim,
