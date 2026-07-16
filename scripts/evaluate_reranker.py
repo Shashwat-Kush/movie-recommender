@@ -31,8 +31,9 @@ from src.data.cold_start import build_aligned_metadata
 from src.models.reranker import create_reranker
 
 K = 10
-CANDIDATES = 50
+CANDIDATES = 25  # reranker token budget (see GroqReranker)
 HISTORY_TITLES = 5
+REQUEST_DELAY_S = 1.0  # stay under Groq per-minute limits
 
 
 def ndcg_single(rank: int) -> float:
@@ -119,15 +120,9 @@ def main():
             genres = str(movies.loc[mid, "genres"]) if mid in movies.index else ""
             candidates.append({"movieId": mid, "title": title, "genres": genres, "tags": ""})
 
-        try:
-            reranked = reranker.rerank(query, candidates, top_k=K)
-        except Exception as e:
-            print(f"  user {user_id}: reranker error ({e}), retrying in 20s")
-            time.sleep(20)
-            try:
-                reranked = reranker.rerank(query, candidates, top_k=K)
-            except Exception:
-                continue
+        # 429 backoff and response caching live inside GroqReranker.
+        reranked = reranker.rerank(query, candidates, top_k=K)
+        time.sleep(REQUEST_DELAY_S)
 
         if reranked and all(m.get("rerank_score", 0) == 0.0 for m in reranked):
             fallbacks += 1

@@ -1,8 +1,11 @@
 """Groq LLM Reranker for movie recommendations."""
 
+import hashlib
 import os
 import json
 import re
+import time
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 from groq import Groq
@@ -15,15 +18,23 @@ class GroqReranker:
         self,
         api_key: Optional[str] = None,
         model: str = "llama-3.1-8b-instant",
-        max_candidates_per_request: int = 50,
+        max_candidates_per_request: int = 25,
+        cache_dir: Optional[str] = "outputs/reranker_cache",
+        max_retries: int = 4,
     ):
         """
         Initialize the Groq reranker.
 
         Args:
             api_key: Groq API key. If None, reads from GROQ_API_KEY env var.
-            model: Model name to use (default: llama3-8b-8192)
-            max_candidates_per_request: Max movies per API call (Groq context limit)
+            model: Model name to use
+            max_candidates_per_request: Max movies per API call. Tokens are the
+                scarce resource (Groq free tier is 500K/day): the tail of a long
+                candidate list is not where reranking earns anything.
+            cache_dir: Disk cache for responses keyed by prompt hash — re-running
+                the same comparison (temperature 0.1 is near-deterministic) costs
+                zero tokens. None disables.
+            max_retries: Exponential-backoff attempts on rate limits (429).
         """
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
         if not self.api_key:
@@ -32,16 +43,17 @@ class GroqReranker:
         self.client = Groq(api_key=self.api_key)
         self.model = model
         self.max_candidates_per_request = max_candidates_per_request
+        self.cache_dir = Path(cache_dir) if cache_dir else None
+        self.max_retries = max_retries
 
     def _build_prompt(self, query: str, movies: List[Dict[str, Any]]) -> str:
-        """Build the reranking prompt for the LLM."""
+        """Build the reranking prompt. Title + genres only: tags are the token
+        hog and the noisiest signal; the LLM reorders fine without them."""
         movie_lines = []
         for i, movie in enumerate(movies):
-            movie_id = movie.get("movieId", movie.get("id", i))
             title = movie.get("title", "Unknown")
             genres = movie.get("genres", "")
-            tags = movie.get("tags", "")
-            movie_lines.append(f"{i}: [{movie_id}] {title} | Genres: {genres} | Tags: {tags}")
+            movie_lines.append(f"{i}: {title} | {genres}")
 
         movie_block = "\n".join(movie_lines)
 
@@ -52,74 +64,90 @@ User Query: "{query}"
 Candidates:
 {movie_block}
 
-Return a JSON object of the form {{"rankings": [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]}}
-where "index" is the 0-based position in candidates and "score" is 1-10 relevance.
-Only include movies you would recommend. Sort by score descending. No prose, JSON only."""
+Return a JSON object {{"ranking": [4, 0, 7]}} — candidate indices (0-based), best first,
+only movies you would recommend. No prose, JSON only."""
 
         return prompt
 
     def _parse_response(self, response_text: str, num_candidates: int) -> List[Dict[str, Any]]:
-        """Parse LLM response into list of (index, score) pairs.
+        """Parse LLM response into ranked (index, score) pairs.
 
-        Expects {"rankings": [...]} (JSON mode), but also accepts a bare array and,
-        as a last resort, salvages complete {"index": i, "score": s} objects from
-        truncated or prose-wrapped output instead of discarding the whole response.
+        Expects {"ranking": [4, 0, 7]} (JSON mode, best first); salvages a bare
+        integer list from truncated or prose-wrapped output as a last resort.
+        Scores are synthesized from rank order (best = num_candidates).
         """
-        pairs = []
+        indices = []
         try:
             parsed = json.loads(response_text)
             if isinstance(parsed, dict):
                 parsed = next((v for v in parsed.values() if isinstance(v, list)), [])
-            for item in parsed:
-                if isinstance(item, dict):
-                    pairs.append((item.get("index"), item.get("score")))
+            indices = [i for i in parsed if isinstance(i, int)]
         except json.JSONDecodeError:
-            salvaged = re.findall(
-                r'\{\s*"index"\s*:\s*(\d+)\s*,\s*"score"\s*:\s*(\d+(?:\.\d+)?)\s*\}', response_text
-            )
-            if not salvaged:
+            match = re.search(r"\[\s*\d+(?:\s*,\s*\d+)*", response_text)
+            if not match:
                 print("Warning: Failed to parse LLM response and nothing salvageable")
                 return []
-            print(f"Warning: LLM response was not valid JSON; salvaged {len(salvaged)} entries")
-            pairs = [(int(i), float(s)) for i, s in salvaged]
+            indices = [int(i) for i in re.findall(r"\d+", match.group())]
+            print(f"Warning: LLM response was not valid JSON; salvaged {len(indices)} indices")
 
         results = []
-        for idx, score in pairs:
-            if isinstance(idx, int) and isinstance(score, (int, float)) and 0 <= idx < num_candidates:
-                results.append({"index": idx, "score": float(score)})
-
-        results.sort(key=lambda x: x["score"], reverse=True)
+        seen = set()
+        for rank, idx in enumerate(indices):
+            if 0 <= idx < num_candidates and idx not in seen:
+                seen.add(idx)
+                results.append({"index": idx, "score": float(num_candidates - rank)})
         return results
+
+    def _cache_path(self, prompt: str) -> Optional[Path]:
+        if self.cache_dir is None:
+            return None
+        key = hashlib.sha256(f"{self.model}|{prompt}".encode()).hexdigest()
+        return self.cache_dir / f"{key}.json"
 
     def _rerank_batch(
         self,
         query: str,
         movies: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
-        """Rerank a single batch of movies."""
+        """Rerank a single batch of movies (disk-cached, 429s retried with backoff)."""
         prompt = self._build_prompt(query, movies)
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a movie recommendation expert. Return only valid JSON.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.1,
-                max_tokens=4096,
-                response_format={"type": "json_object"},
-            )
+        cache_path = self._cache_path(prompt)
+        if cache_path is not None and cache_path.exists():
+            return json.loads(cache_path.read_text())
 
-            response_text = response.choices[0].message.content or ""
-            return self._parse_response(response_text, len(movies))
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a movie recommendation expert. Return only valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.1,
+                    max_tokens=512,
+                    response_format={"type": "json_object"},
+                )
+                response_text = response.choices[0].message.content or ""
+                results = self._parse_response(response_text, len(movies))
+                if results and cache_path is not None:
+                    cache_path.parent.mkdir(parents=True, exist_ok=True)
+                    cache_path.write_text(json.dumps(results))
+                return results
 
-        except Exception as e:
-            print(f"Error calling Groq API: {e}")
-            return []
+            except Exception as e:
+                is_rate_limit = "429" in str(e) or "rate_limit" in str(e)
+                if is_rate_limit and attempt < self.max_retries:
+                    delay = 5 * 2**attempt
+                    print(f"Groq rate limit, backing off {delay}s (attempt {attempt + 1}/{self.max_retries})")
+                    time.sleep(delay)
+                    continue
+                print(f"Error calling Groq API: {e}")
+                return []
+        return []
 
     def rerank(
         self,
@@ -176,5 +204,7 @@ def create_reranker(config: Optional[Dict[str, Any]] = None) -> GroqReranker:
     return GroqReranker(
         api_key=config.get("api_key"),
         model=config.get("model", "llama-3.1-8b-instant"),
-        max_candidates_per_request=config.get("max_candidates_per_request", 50),
+        max_candidates_per_request=config.get("max_candidates_per_request", 25),
+        cache_dir=config.get("cache_dir", "outputs/reranker_cache"),
+        max_retries=config.get("max_retries", 4),
     )

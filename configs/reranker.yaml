@@ -1,3 +1,7 @@
 model: "llama-3.1-8b-instant"
-max_candidates_per_request: 50
+# Tokens are the scarce resource (Groq free tier: 500K/day). 25 candidates,
+# title+genres only, compact index-list output, disk cache, 429 backoff.
+max_candidates_per_request: 25
+cache_dir: "outputs/reranker_cache"
+max_retries: 4
 timeout: 30
