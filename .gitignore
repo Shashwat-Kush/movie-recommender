@@ -28,6 +28,7 @@ data/raw/*
 *.pkl
 *.h5
 *.npy
+*.npz
 
 # Model checkpoints (large, regenerable via scripts/train_all.py)
 checkpoints/*
