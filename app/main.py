@@ -208,7 +208,7 @@ async def startup():
         _model_cache["seen_table"] = None
         print(f"Note: {seen_path} not found (run scripts/evaluate.py); falling back to per-request parquet scans")
 
-    checkpoint_path = Path("checkpoints/two_tower_history/best_model.pt")
+    checkpoint_path = Path("checkpoints/two_tower_history_v2/best_model.pt")
     load_query_embedding_model(checkpoint_path, len(idx_to_movie_id), device)
 
     _model_cache["user_mapping"] = user_mapping

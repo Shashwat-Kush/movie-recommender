@@ -1,0 +1,27 @@
+{
+  "checkpoint": "checkpoints/two_tower_history_v2/best_model.pt",
+  "popularity_weight": 0.0,
+  "buckets": {
+    "train_window (<2009-01-01)": {
+      "recall@10": 0.09715651415865927,
+      "ndcg@10": 0.047670924706998984,
+      "popularity_recall@10": 0.049004339180942866,
+      "popularity_ndcg@10": 0.024639158384089328,
+      "num_users_evaluated": 102093
+    },
+    "val_window (2009-01-01..2012-01-01)": {
+      "recall@10": 0.09396855759459621,
+      "ndcg@10": 0.048837693735329986,
+      "popularity_recall@10": 0.05338035746308805,
+      "popularity_ndcg@10": 0.028333193036463207,
+      "num_users_evaluated": 16729
+    },
+    "test_window (2012-01-01..2015-12-31)": {
+      "recall@10": 0.08499822073102536,
+      "ndcg@10": 0.04352022286535327,
+      "popularity_recall@10": 0.0422449290834223,
+      "popularity_ndcg@10": 0.022878207407117747,
+      "num_users_evaluated": 19671
+    }
+  }
+}

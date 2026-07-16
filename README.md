@@ -11,12 +11,15 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 The served retrieval model is a **history-based Two-Tower** trained with **in-batch sampled
 softmax** (InfoNCE, temperature 0.05) and **logQ correction**:
 
-- **User tower**: the mean of the item-embedding rows for the user's 20 most recent liked
-  movies (rating ≥ 3.5), through a 3-layer MLP. No per-user parameters — the model serves
-  any user with a watch history and reacts to new watches without retraining.
+- **User tower**: a recency-weighted mean (decay 0.9 per position) of the item-embedding
+  rows for the user's 20 most recent liked movies (rating ≥ 3.5), through a 3-layer MLP.
+  No per-user parameters — the model serves any user with a watch history and reacts to
+  new watches without retraining.
 - **Item tower**: item-ID embedding concatenated with a 128-dim MiniLM metadata embedding
-  (title/genres/tags), through its own MLP. Both outputs are L2-normalized; the score is
-  their dot product.
+  (title/genres/tags), through its own MLP. During training the ID embedding is zeroed
+  for a random 20% of items (**ID dropout**), which is what makes the metadata-only
+  cold-start path actually work. Both outputs are L2-normalized; the score is their dot
+  product.
 - **Loss**: every other in-batch item acts as a popularity-distributed negative. Cosine
   logits are divided by a temperature (bounded logits fed straight into a loss saturate and
   stop learning — the original BCE-on-cosine setup failed exactly this way). Subtracting
@@ -37,20 +40,26 @@ K = 10 (`outputs/eval_loo*.json`):
 | Implicit MF / BPR (3 epochs) | 6.45% | 3.31% |
 | ID-embedding Two-Tower, raw cosine | 4.51% | 2.16% |
 | ID-embedding Two-Tower + tuned popularity blend (w=0.1) | 9.57% | 4.77% |
-| **History Two-Tower + logQ (served), raw cosine** | **9.53%** | **4.70%** |
+| History Two-Tower + logQ, raw cosine | 9.53% | 4.70% |
+| **+ ID dropout & recency decay (served, "v2")** | **9.50%** | **4.72%** |
 
-The last two are statistically tied, but the history+logQ model has no per-user parameters
-(85MB smaller), no hand-tuned serving knob, and converged in half the epochs.
+The last three are statistically tied on warm recall, but each iteration is structurally
+better: the history+logQ model dropped per-user parameters (85MB) and the tuned serving
+knob; v2 additionally fixes cold-start (below) at no warm cost.
+
+**Cold-start** (`scripts/evaluate_cold_start.py`, 20% of items embedded metadata-only) —
+before ID dropout the cold path collapsed to **0.13%** recall@10 vs 10.56% warm on the
+same users (the item tower had never seen a zeroed ID embedding). With ID dropout, cold
+items score **8.89%** vs 10.34% warm — within 1.5pt of warm and above the 7.21%
+popularity baseline for those users. A genuinely new movie now gets sensible
+recommendations from metadata alone.
 
 **Temporal robustness** (`scripts/evaluate_timesplit.py`) — recall by the period of the
-held-out interaction: 9.85% before 2009, 9.10% in 2009–2012, 8.28% in 2012–2016; ~2× the
-popularity baseline in every window. (The LOO protocol trains on all periods, so this
-measures robustness to recency, not strict train-on-past generalization.)
-
-**Cold-start** (`scripts/evaluate_cold_start.py`) — with 20% of items embedded via the
-metadata-only cold path, recall on those items collapses to 0.13% vs 10.56% warm for the
-same users: the item tower never trained with a zeroed ID embedding, so the cold path is
-currently decorative. Fixing it needs training-time ID-embedding dropout.
+held-out interaction: 9.72% before 2009, 9.40% in 2009–2012, 8.50% in 2012–2016; ~2× the
+popularity baseline in every window, with the recency-decay pooling improving the two
+recent windows over the plain mean (9.10% → 9.40%, 8.28% → 8.50%). (The LOO protocol
+trains on all periods, so this measures robustness to recency, not strict train-on-past
+generalization.)
 
 **Reranker A/B** (`scripts/evaluate_reranker.py`, 200 users) — Groq reranking of the
 retrieval top candidates moves recall@10 from 7.0% to 7.5% and NDCG from 3.88 to 4.22:
@@ -182,5 +191,5 @@ from the scripts above.
   by prompt hash (`outputs/reranker_cache/`), and 429s retried with exponential backoff. It
   falls back to retrieval order if Groq still fails.
 - Matrix Factorization exists as a baseline but nothing in the serving path uses it.
-- Cold-start serving (`get_item_embeddings_cold`) is measurably broken until the model is
-  retrained with ID-embedding dropout — see Results.
+- Unit tests (`PYTHONPATH=. python3 -m pytest tests/ -q`) cover metadata alignment,
+  history pooling/exclusion/ID-dropout semantics, and reranker response parsing.

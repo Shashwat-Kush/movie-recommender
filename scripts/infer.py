@@ -183,7 +183,7 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="checkpoints/two_tower_history/best_model.pt",
+        default="checkpoints/two_tower_history_v2/best_model.pt",
         help="Path to Two-Tower checkpoint",
     )
     parser.add_argument(

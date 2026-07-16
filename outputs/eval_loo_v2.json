@@ -1,0 +1,12 @@
+{
+  "protocol": "leave_one_out",
+  "checkpoint": "checkpoints/two_tower_history_v2/best_model.pt",
+  "metrics": {
+    "recall@10": 0.09504451488522886,
+    "ndcg@10": 0.047222313030944166,
+    "popularity_recall@10": 0.04857285205750471,
+    "popularity_ndcg@10": 0.024835253775419456,
+    "num_users_evaluated": 138493,
+    "popularity_weight": 0.0
+  }
+}
