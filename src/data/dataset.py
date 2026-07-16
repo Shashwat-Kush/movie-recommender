@@ -25,7 +25,7 @@ class ParquetStreamingDataset(IterableDataset):
         filter_expr: Optional[ds.Expression] = None,
         batch_size: int = 1024,
         shuffle: bool = False,
-        shuffle_buffer_size: int = 10000,
+        shuffle_buffer_size: int = 1_000_000,
         seed: int = 42,
     ):
         self.parquet_dir = Path(parquet_dir)
@@ -33,8 +33,9 @@ class ParquetStreamingDataset(IterableDataset):
         self.filter_expr = filter_expr
         self.batch_size = batch_size
         self.shuffle = shuffle
-        self.shuffle_buffer_size = shuffle_buffer_size
+        self.shuffle_buffer_size = shuffle_buffer_size  # rows, not batches
         self.seed = seed
+        self._pass_count = 0
 
         # Discover all parquet files (handles both single file and directory)
         path = Path(parquet_dir)
@@ -69,24 +70,37 @@ class ParquetStreamingDataset(IterableDataset):
             yield self._batch_to_dict(batch)
 
     def _shuffled_iter(self, scanner) -> Iterator[Dict[str, np.ndarray]]:
-        """Shuffle using reservoir sampling buffer."""
-        import random
-        random.seed(self.seed)
-        np.random.seed(self.seed)
+        """Row-level windowed shuffle: fill a buffer of rows, permute, emit as batches.
 
-        buffer = []
+        Parquet rows are grouped by user, so shuffling whole scanner batches (the old
+        behavior) kept each emitted batch single-user — fatal for in-batch negatives.
+        The seed advances every pass so epochs see different orders.
+        """
+        rng = np.random.default_rng((self.seed, self._pass_count))
+        self._pass_count += 1
+
+        buffer: List[Dict[str, np.ndarray]] = []
+        buffered_rows = 0
+
+        def drain() -> Iterator[Dict[str, np.ndarray]]:
+            if not buffer:
+                return
+            merged = {k: np.concatenate([b[k] for b in buffer]) for k in buffer[0]}
+            perm = rng.permutation(len(next(iter(merged.values()))))
+            for start in range(0, len(perm), self.batch_size):
+                idx = perm[start : start + self.batch_size]
+                yield {k: v[idx] for k, v in merged.items()}
+
         for batch in scanner.to_batches():
             batch_dict = self._batch_to_dict(batch)
             buffer.append(batch_dict)
+            buffered_rows += len(next(iter(batch_dict.values())))
 
-            if len(buffer) >= self.shuffle_buffer_size:
-                idx = random.randrange(len(buffer))
-                yield buffer.pop(idx)
+            if buffered_rows >= self.shuffle_buffer_size:
+                yield from drain()
+                buffer, buffered_rows = [], 0
 
-        # Flush remaining buffer
-        random.shuffle(buffer)
-        for batch_dict in buffer:
-            yield batch_dict
+        yield from drain()
 
     def _batch_to_dict(self, batch: pa.RecordBatch) -> Dict[str, np.ndarray]:
         """Convert PyArrow RecordBatch to dict of numpy arrays (zero-copy where possible)."""
@@ -197,51 +211,43 @@ def create_dataloaders(
     batch_size: int = 1024,
     shuffle_train: bool = True,
     device: Optional[torch.device] = None,
+    protocol: str = "time",
 ) -> Tuple[
-    MemoryEfficientDataLoader,
-    MemoryEfficientDataLoader,
     MemoryEfficientDataLoader,
     MemoryEfficientDataLoader,
     Dict[int, int],
     Dict[int, int],
 ]:
-    """Create train/val/test dataloaders from processed Parquet splits."""
+    """Create train/val dataloaders from processed Parquet splits.
+
+    protocol="time" trains on the time split (train/val_time); protocol="loo" trains
+    on the leave-one-out split (train_loo/val_loo). Training and evaluation must use
+    the same protocol: evaluate.py tests on test_loo, so a model trained on the time
+    split has the LOO test answers inside its training data.
+    """
     if device is None:
         device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
     splits_dir = Path(config["splits"]["output_dir"])
 
-    # Build ID mappings from training data
-    train_dir = splits_dir / "train.parquet"
-    if train_dir.is_dir():
-        user_map, movie_map = build_id_mappings(train_dir)
-    else:
-        # Single file
-        user_map, movie_map = build_id_mappings(train_dir.parent)
+    train_file, val_file = {
+        "time": ("train.parquet", "val_time.parquet"),
+        "loo": ("train_loo.parquet", "val_loo.parquet"),
+    }[protocol]
+
+    # ID mappings cover all splits (build_id_mappings reads every train/val/test file),
+    # so both protocols share the same user/item index space.
+    user_map, movie_map = build_id_mappings(splits_dir)
 
     train_ds = RatingsDataset(
-        splits_dir / "train.parquet",
+        splits_dir / train_file,
         user_id_map=user_map,
         movie_id_map=movie_map,
         batch_size=batch_size,
         shuffle=shuffle_train,
     )
-    val_time_ds = RatingsDataset(
-        splits_dir / "val_time.parquet",
-        user_id_map=user_map,
-        movie_id_map=movie_map,
-        batch_size=batch_size,
-        shuffle=False,
-    )
-    val_loo_ds = RatingsDataset(
-        splits_dir / "val_loo.parquet",
-        user_id_map=user_map,
-        movie_id_map=movie_map,
-        batch_size=batch_size,
-        shuffle=False,
-    )
-    test_ds = RatingsDataset(
-        splits_dir / "test_time.parquet",
+    val_ds = RatingsDataset(
+        splits_dir / val_file,
         user_id_map=user_map,
         movie_id_map=movie_map,
         batch_size=batch_size,
@@ -250,9 +256,7 @@ def create_dataloaders(
 
     return (
         MemoryEfficientDataLoader(train_ds, device),
-        MemoryEfficientDataLoader(val_time_ds, device),
-        MemoryEfficientDataLoader(val_loo_ds, device),
-        MemoryEfficientDataLoader(test_ds, device),
+        MemoryEfficientDataLoader(val_ds, device),
         user_map,
         movie_map,
     )

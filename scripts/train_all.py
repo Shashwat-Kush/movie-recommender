@@ -58,7 +58,7 @@ def train_mf_explicit(args, data_config, model_config):
     print("Training Matrix Factorization (Explicit / MSE)")
     print("=" * 60)
 
-    train_loader, val_time_loader, val_loo_loader, test_loader, user_map, movie_map = create_dataloaders(
+    train_loader, val_time_loader, user_map, movie_map = create_dataloaders(
         data_config,
         batch_size=model_config.get("batch_size", 2048),
         shuffle_train=True,
@@ -97,7 +97,7 @@ def train_mf_implicit(args, data_config, model_config):
     print("Training Matrix Factorization (Implicit / BPR)")
     print("=" * 60)
 
-    train_loader, val_time_loader, val_loo_loader, test_loader, user_map, movie_map = create_dataloaders(
+    train_loader, val_time_loader, user_map, movie_map = create_dataloaders(
         data_config,
         batch_size=model_config.get("batch_size", 2048),
         shuffle_train=True,
@@ -130,59 +130,36 @@ def train_mf_implicit(args, data_config, model_config):
 
 
 class TwoTowerDataset(torch.utils.data.IterableDataset):
-    """IterableDataset for Two-Tower training with metadata and negative sampling."""
+    """Yields positive (user, item, metadata) batches for in-batch softmax training.
+
+    Negatives are not sampled here: within a batch, every other row's item serves as
+    a negative (see TwoTowerTrainer._in_batch_softmax_loss). Only ratings >= min_rating
+    count as positives — a 0.5-star rating is evidence the user disliked the movie.
+    """
 
     def __init__(
         self,
         data_iter: Iterator[Dict[str, torch.Tensor]],
-        n_users: int,
-        n_items: int,
         item_metadata: torch.Tensor,
-        neg_sampling_ratio: int = 4,
-        implicit: bool = True,
+        min_rating: float = 3.5,
     ):
         self.data_iter = data_iter
-        self.n_users = n_users
-        self.n_items = n_items
         self.item_metadata = item_metadata
-        self.neg_sampling_ratio = neg_sampling_ratio
-        self.implicit = implicit
+        self.min_rating = min_rating
 
     def __iter__(self) -> Iterator[Dict[str, torch.Tensor]]:
         for batch in self.data_iter:
-            user_ids = batch["userId"]
-            pos_item_ids = batch["movieId"]
+            keep = batch["rating"] >= self.min_rating
+            user_ids = batch["userId"][keep]
+            item_ids = batch["movieId"][keep]
+            if len(user_ids) < 2:  # softmax needs at least one in-batch negative
+                continue
 
-            if self.implicit:
-                neg_item_ids = torch.randint(
-                    0, self.n_items,
-                    (len(user_ids) * self.neg_sampling_ratio,),
-                    device=user_ids.device,
-                    dtype=pos_item_ids.dtype,
-                )
-                user_ids_expanded = user_ids.repeat_interleave(self.neg_sampling_ratio)
-                pos_items_expanded = pos_item_ids.repeat_interleave(self.neg_sampling_ratio)
-
-                pos_metadata = self.item_metadata[pos_items_expanded]
-                neg_metadata = self.item_metadata[neg_item_ids]
-
-                yield {
-                    "user_ids": user_ids_expanded,
-                    "pos_item_ids": pos_items_expanded,
-                    "neg_item_ids": neg_item_ids,
-                    "pos_item_metadata": pos_metadata,
-                    "neg_item_metadata": neg_metadata,
-                }
-            else:
-                ratings = batch["rating"].float()
-                pos_metadata = self.item_metadata[pos_item_ids]
-
-                yield {
-                    "user_ids": user_ids,
-                    "pos_item_ids": pos_item_ids,
-                    "pos_item_metadata": pos_metadata,
-                    "ratings": ratings,
-                }
+            yield {
+                "user_ids": user_ids,
+                "item_ids": item_ids,
+                "item_metadata": self.item_metadata[item_ids],
+            }
 
 
 class TwoTowerTrainer:
@@ -208,7 +185,10 @@ class TwoTowerTrainer:
         self.max_epochs = self.config.get("max_epochs", 10)
         self.use_fp16 = self.config.get("use_fp16", True)
         self.grad_clip = float(self.config.get("grad_clip", 1.0))
-        self.loss_type = self.config.get("loss_type", "bce")
+        # Cosine scores live in [-1, 1]; dividing by the temperature spreads them into
+        # a useful logit range. Without it the softmax/sigmoid saturates around 0.5
+        # and gradients vanish — the failure mode of the original BCE-on-cosine loss.
+        self.temperature = float(self.config.get("temperature", 0.05))
 
         # LR scheduler config. Cast numerics: YAML 1.1 reads unpunctuated exponents like
         # 1e-6 as str, not float (it wants 1.0e-6), which blows up on first arithmetic.
@@ -260,36 +240,33 @@ class TwoTowerTrainer:
         self.checkpoint_dir = Path(self.config.get("checkpoint_dir", "checkpoints/two_tower"))
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-    def _bce_loss(self, pos_scores: torch.Tensor, neg_scores: torch.Tensor) -> torch.Tensor:
-        """Binary cross-entropy loss for retrieval (positive=1, negative=0)."""
-        pos_labels = torch.ones_like(pos_scores)
-        neg_labels = torch.zeros_like(neg_scores)
+    def _in_batch_softmax_loss(
+        self,
+        user_ids: torch.Tensor,
+        item_ids: torch.Tensor,
+        item_metadata: torch.Tensor,
+    ) -> torch.Tensor:
+        """Sampled softmax with in-batch negatives (InfoNCE).
 
-        pos_loss = torch.nn.functional.binary_cross_entropy_with_logits(pos_scores, pos_labels)
-        neg_loss = torch.nn.functional.binary_cross_entropy_with_logits(neg_scores, neg_labels)
+        Each row's item is the positive for its user; the other B-1 items in the batch
+        are negatives. Because those items are other users' positives, they follow the
+        popularity distribution — much harder negatives than uniform random sampling.
+        """
+        user_emb = self.model.get_user_embeddings(user_ids)
+        item_emb = self.model.get_item_embeddings(item_ids, item_metadata)
 
-        return pos_loss + neg_loss
-
-    def _margin_loss(self, pos_scores: torch.Tensor, neg_scores: torch.Tensor, margin: float = 0.2) -> torch.Tensor:
-        """Contrastive margin loss (max(0, margin - pos_score + neg_score))."""
-        return torch.clamp(margin - pos_scores.unsqueeze(1) + neg_scores, min=0).mean()
+        logits = (user_emb @ item_emb.T) / self.temperature
+        labels = torch.arange(logits.size(0), device=logits.device)
+        return torch.nn.functional.cross_entropy(logits, labels)
 
     def train_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         """Single training step with FP16 and gradient accumulation."""
         user_ids = batch["user_ids"].to(self.device, non_blocking=True)
-        pos_item_ids = batch["pos_item_ids"].to(self.device, non_blocking=True)
-        pos_item_metadata = batch["pos_item_metadata"].to(self.device, non_blocking=True)
-        neg_item_ids = batch["neg_item_ids"].to(self.device, non_blocking=True)
-        neg_item_metadata = batch["neg_item_metadata"].to(self.device, non_blocking=True)
+        item_ids = batch["item_ids"].to(self.device, non_blocking=True)
+        item_metadata = batch["item_metadata"].to(self.device, non_blocking=True)
 
         with autocast("mps", dtype=torch.float16, enabled=self.use_fp16):
-            pos_scores = self.model(user_ids, pos_item_ids, pos_item_metadata)
-            neg_scores = self.model(user_ids, neg_item_ids, neg_item_metadata)
-
-            if self.loss_type == "bce":
-                loss = self._bce_loss(pos_scores, neg_scores)
-            else:
-                loss = self._margin_loss(pos_scores, neg_scores)
+            loss = self._in_batch_softmax_loss(user_ids, item_ids, item_metadata)
 
         loss = loss / self.accum_steps
         self.scaler.scale(loss).backward()
@@ -302,10 +279,14 @@ class TwoTowerTrainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
             self.scaler.step(self.optimizer)
             self.scaler.update()
-            self.optimizer.zero_grad(set_to_none=True)
+            # set_to_none=False keeps gradient buffers allocated. With set_to_none=True
+            # the 67MB user-embedding grad is freed each step and re-requested from the
+            # Metal driver, which fails (MPS OOM) whenever other apps have the 8GB
+            # unified memory near the working-set cap.
+            self.optimizer.zero_grad(set_to_none=False)
 
         detached_loss = loss.detach() * self.accum_steps
-        del batch, user_ids, pos_item_ids, pos_item_metadata, neg_item_ids, neg_item_metadata, loss
+        del batch, user_ids, item_ids, item_metadata, loss
         # Cleanup runs every 100 batches in train_epoch, not per step: empty_cache() per step
         # forces the allocator to return blocks it immediately reallocates, and the del above
         # already drops the refcounts (gc.collect only matters for reference cycles).
@@ -313,7 +294,7 @@ class TwoTowerTrainer:
 
     @torch.no_grad()
     def validate(self) -> Dict[str, float]:
-        """Run validation using BCE loss on held-out interactions."""
+        """Run validation using in-batch softmax loss on held-out interactions."""
         if self.val_loader is None:
             return {}
 
@@ -323,24 +304,16 @@ class TwoTowerTrainer:
 
         for batch in self.val_loader:
             user_ids = batch["user_ids"].to(self.device, non_blocking=True)
-            pos_item_ids = batch["pos_item_ids"].to(self.device, non_blocking=True)
-            pos_item_metadata = batch["pos_item_metadata"].to(self.device, non_blocking=True)
-            neg_item_ids = batch["neg_item_ids"].to(self.device, non_blocking=True)
-            neg_item_metadata = batch["neg_item_metadata"].to(self.device, non_blocking=True)
+            item_ids = batch["item_ids"].to(self.device, non_blocking=True)
+            item_metadata = batch["item_metadata"].to(self.device, non_blocking=True)
 
             with autocast("mps", dtype=torch.float16, enabled=self.use_fp16):
-                pos_scores = self.model(user_ids, pos_item_ids, pos_item_metadata)
-                neg_scores = self.model(user_ids, neg_item_ids, neg_item_metadata)
-
-                if self.loss_type == "bce":
-                    loss = self._bce_loss(pos_scores, neg_scores)
-                else:
-                    loss = self._margin_loss(pos_scores, neg_scores)
+                loss = self._in_batch_softmax_loss(user_ids, item_ids, item_metadata)
 
             total_loss += loss.item()
             num_batches += 1
 
-            del batch, user_ids, pos_item_ids, pos_item_metadata, neg_item_ids, neg_item_metadata, loss
+            del batch, user_ids, item_ids, item_metadata, loss
             if num_batches % 100 == 0:
                 torch.mps.empty_cache()
                 gc.collect()
@@ -379,10 +352,14 @@ class TwoTowerTrainer:
         return {"train_loss": total_loss / max(num_batches, 1)}
 
     def train(self) -> Dict[str, list]:
-        """Full training loop with LR scheduling and early stopping."""
+        """Full training loop with LR scheduling and early stopping.
+
+        Starts from self.epoch, which load_checkpoint advances past the last
+        completed epoch — so a resumed run continues where it left off.
+        """
         history = {"train_loss": [], "val_loss": []}
 
-        for epoch in range(self.max_epochs):
+        for epoch in range(self.epoch, self.max_epochs):
             self.epoch = epoch
             train_metrics = self.train_epoch()
             val_metrics = self.validate()
@@ -456,14 +433,17 @@ class TwoTowerTrainer:
         )
 
     def load_checkpoint(self, path: str) -> None:
-        """Load model checkpoint."""
+        """Load model checkpoint and position training to continue after it."""
         checkpoint = torch.load(path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.scaler.load_state_dict(checkpoint["scaler_state_dict"])
         self.step_count = checkpoint["step_count"]
-        self.epoch = checkpoint["epoch"]
+        self.epoch = checkpoint["epoch"] + 1  # checkpoint epoch is completed; resume at next
         self.best_val_loss = checkpoint["best_val_loss"]
+        # Early-stopping counters aren't persisted; seed them from best_val_loss so a
+        # resumed run doesn't treat pre-checkpoint progress as "no improvement".
+        self.es_best_loss = self.best_val_loss
 
 
 def train_two_tower(args, data_config, model_config):
@@ -474,11 +454,15 @@ def train_two_tower(args, data_config, model_config):
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
-    train_loader, val_time_loader, val_loo_loader, test_loader, user_map, movie_map = create_dataloaders(
+    # LOO protocol: evaluate.py tests on test_loo (each user's last interaction), so
+    # train on train_loo. Training on the time split leaked most test answers into
+    # the training data (any user whose last rating predates the cutoff).
+    train_loader, val_loader, user_map, movie_map = create_dataloaders(
         data_config,
         batch_size=model_config.get("batch_size", 2048),
         shuffle_train=True,
         device=device,
+        protocol="loo",
     )
 
     n_users = len(user_map)
@@ -510,25 +494,11 @@ def train_two_tower(args, data_config, model_config):
     checkpoint_dir = model_config.get("checkpoint_dir", "checkpoints/two_tower")
     model_config["checkpoint_dir"] = checkpoint_dir
 
-    # Wrap loaders with negative sampling and metadata lookup
-    neg_ratio = tt_config.get("neg_sampling_ratio", 4)
+    # Wrap loaders with positive filtering and metadata lookup
+    min_rating = tt_config.get("min_rating", 3.5)
 
-    train_dataset = TwoTowerDataset(
-        train_loader,
-        n_users=n_users,
-        n_items=n_items,
-        item_metadata=item_metadata,
-        neg_sampling_ratio=neg_ratio,
-        implicit=True,
-    )
-    val_dataset = TwoTowerDataset(
-        val_time_loader,
-        n_users=n_users,
-        n_items=n_items,
-        item_metadata=item_metadata,
-        neg_sampling_ratio=neg_ratio,
-        implicit=True,
-    )
+    train_dataset = TwoTowerDataset(train_loader, item_metadata, min_rating=min_rating)
+    val_dataset = TwoTowerDataset(val_loader, item_metadata, min_rating=min_rating)
 
     # Training configuration
     train_config = {
@@ -539,9 +509,9 @@ def train_two_tower(args, data_config, model_config):
         "max_epochs": model_config.get("max_epochs", 10),
         "use_fp16": model_config.get("use_fp16", True),
         "grad_clip": model_config.get("grad_clip", 1.0),
-        "loss_type": model_config.get("loss_type", "bce"),
+        "temperature": tt_config.get("temperature", 0.05),
+        "min_rating": min_rating,
         "checkpoint_dir": checkpoint_dir,
-        "neg_sampling_ratio": neg_ratio,
         "lr_scheduler": model_config.get("lr_scheduler", {}),
         "early_stopping": model_config.get("early_stopping", {}),
         "log_interval": model_config.get("log_interval", 500),
@@ -556,6 +526,19 @@ def train_two_tower(args, data_config, model_config):
     }
 
     trainer = TwoTowerTrainer(model, train_dataset, val_dataset, train_config, device)
+
+    if getattr(args, "resume", False):
+        epoch_ckpts = sorted(
+            Path(checkpoint_dir).glob("epoch_*.pt"),
+            key=lambda p: int(p.stem.split("_")[1]),
+        )
+        if epoch_ckpts:
+            latest = epoch_ckpts[-1]
+            trainer.load_checkpoint(str(latest))
+            print(f"Resumed from {latest} (continuing at epoch {trainer.epoch + 1}/{trainer.max_epochs})")
+        else:
+            print("No epoch checkpoint found, training from scratch")
+
     history = trainer.train()
 
     print(f"\nTraining complete. Best val loss: {trainer.best_val_loss:.4f}")
@@ -582,6 +565,11 @@ def main():
         type=str,
         default="configs/model.yaml",
         help="Path to model config"
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume two_tower training from the latest epoch_N.pt checkpoint"
     )
     args = parser.parse_args()
 

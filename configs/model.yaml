@@ -11,11 +11,13 @@ two_tower:
   output_dim: 128
   dropout: 0.1
   metadata_dim: 128
-  neg_sampling_ratio: 4
+  temperature: 0.05   # divides cosine scores into logit range for in-batch softmax
+  min_rating: 3.5     # ratings below this are not treated as positives
 
 # Training hyperparameters
 # Exponents need the 1.0e-5 form: YAML 1.1 reads 1e-5 as a string, not a float.
-batch_size: 2048
+# 2048 OOMs on 8GB MPS with the in-batch softmax loss (B x B logits + backward temps)
+batch_size: 1024
 accum_steps: 4
 lr: 0.001
 weight_decay: 1.0e-5
