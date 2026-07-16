@@ -1,10 +1,15 @@
 /**
- * Typed API layer. This build has exactly one mode: it replays real recorded
- * responses from fixtures/ (captured from the live system by
- * scripts/capture_fixtures.py). The interface is shaped like a real API call —
- * async, typed, same request/response shapes as the FastAPI backend — so
- * swapping in a live fetch later is a one-file change. There is deliberately
- * no live HTTP client, no health polling, and no mode switching here.
+ * Typed API layer with two build-time modes:
+ *
+ * - Fixture replay (default, and the only mode in deployed builds): real
+ *   recorded responses from fixtures/, captured from the live system by
+ *   scripts/capture_fixtures.py.
+ * - Live (when NEXT_PUBLIC_API_URL is set at build time, e.g. in .env.local
+ *   for local testing): real fetches against the FastAPI backend — any user,
+ *   any query, any cold-start picks.
+ *
+ * The env var is inlined at build time, so a build without it contains only
+ * the fixture path and stays a pure static site.
  */
 
 import type {
@@ -25,11 +30,34 @@ import evalData from "../../fixtures/eval.json";
 
 const fixtures = fixtureData as unknown as FixtureFile;
 
+/** True when this build talks to a real backend instead of replaying fixtures. */
+export const LIVE_MODE = Boolean(process.env.NEXT_PUBLIC_API_URL);
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
 export class NoFixtureError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "NoFixtureError";
   }
+}
+
+async function livePost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = `${res.status} ${res.statusText}`;
+    try {
+      const err = await res.json();
+      if (err.detail) detail = String(err.detail);
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new Error(detail);
+  }
+  return res.json() as Promise<T>;
 }
 
 const normalize = (s: string) => s.trim().toLowerCase();
@@ -41,6 +69,7 @@ const capMs = (ms: number, cap: number) => Math.min(ms, cap);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function recommend(req: RecommendRequest): Promise<RecommendResponse> {
+  if (LIVE_MODE) return livePost<RecommendResponse>("/recommend", req);
   const hit = fixtures.recommend.find(
     (f) => f.request.user_id === req.user_id && normalize(f.request.query) === normalize(req.query),
   );
@@ -55,6 +84,7 @@ export async function recommend(req: RecommendRequest): Promise<RecommendRespons
 }
 
 export async function recommendCold(req: ColdRecommendRequest): Promise<RecommendResponse> {
+  if (LIVE_MODE) return livePost<RecommendResponse>("/recommend_cold", req);
   const wanted = [...req.liked_movie_ids].sort().join(",");
   const hit = fixtures.recommend_cold.find(
     (f) =>

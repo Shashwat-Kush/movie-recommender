@@ -13,6 +13,7 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
@@ -23,6 +24,14 @@ from src.models.reranker import LLMReranker, create_reranker
 
 
 app = FastAPI(title="Movie Recommender API", version="1.0.0")
+
+# The Next.js dev/preview frontend calls this API cross-origin in live mode.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class RecommendRequest(BaseModel):

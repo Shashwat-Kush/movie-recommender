@@ -14,6 +14,7 @@ function GithubIcon({ size = 16 }: { size?: number }) {
   );
 }
 import { useSettings } from "@/lib/store";
+import { LIVE_MODE } from "@/lib/api";
 
 const REPO_URL = "https://github.com/Shashwat-Kush/movie-recommender";
 
@@ -21,9 +22,17 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 });
 
-function DemoBanner() {
+function ModeBanner() {
+  if (LIVE_MODE) {
+    return (
+      <div className="glass border-b border-border px-4 py-1.5 text-center text-xs text-text-dim">
+        <span className="pulse-dot mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success align-middle" />
+        Live — connected to the local backend. Any user, any query.
+      </div>
+    );
+  }
   return (
-    <div className="border-b border-border bg-card/60 px-4 py-1.5 text-center text-xs text-text-dim">
+    <div className="glass border-b border-border px-4 py-1.5 text-center text-xs text-text-dim">
       Demo — replaying recorded responses from the real system.{" "}
       <a href={REPO_URL} className="text-accent underline-offset-2 hover:underline" target="_blank" rel="noreferrer">
         Code on GitHub
@@ -117,8 +126,9 @@ export function Shell({ children }: { children: ReactNode }) {
   }, [reduceMotion]);
   return (
     <QueryClientProvider client={queryClient}>
+      <div className="aurora" aria-hidden />
       <div className="flex min-h-screen flex-col">
-        <DemoBanner />
+        <ModeBanner />
         <Nav />
         <main className="flex-1">{children}</main>
         <Footer />

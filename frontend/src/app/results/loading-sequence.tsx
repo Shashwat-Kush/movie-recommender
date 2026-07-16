@@ -33,7 +33,8 @@ export function LoadingSequence({ query }: { query: string }) {
   }, []);
 
   return (
-    <div className="mx-auto mt-16 w-full max-w-md rounded-2xl border border-border bg-card p-6">
+    <div className="border-gradient glass mx-auto mt-16 w-full max-w-md rounded-2xl p-6">
+      <div className="shimmer mb-4 h-0.5 w-full rounded-full" />
       <p className="mb-5 truncate font-mono text-xs text-text-faint">“{query}”</p>
       <ol className="flex flex-col gap-4">
         {STEPS.slice(0, 4).map((s, i) => {

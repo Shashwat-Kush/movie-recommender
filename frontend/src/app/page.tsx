@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Cpu, Layers, Shuffle, Sparkles, UserRound } from "lucide-react";
 import Link from "next/link";
-import { coldScenarios, demoUsers, pickerMovies, recordedQueries } from "@/lib/api";
+import { coldScenarios, demoUsers, pickerMovies, recordedQueries, LIVE_MODE } from "@/lib/api";
 import { titleOnly } from "@/lib/format";
 import { Tooltip } from "@/components/ui";
 
@@ -34,28 +34,30 @@ function DotField() {
 function WarmSearch() {
   const router = useRouter();
   const [userIdx, setUserIdx] = useState(0);
+  const [customUserId, setCustomUserId] = useState<string | null>(null);
   const [query, setQuery] = useState(recordedQueries[0] ?? "");
   const user = demoUsers[userIdx];
+  const effectiveUserId = customUserId !== null && customUserId !== "" ? Number(customUserId) : user.user_id;
 
   const go = () => {
     if (!query.trim()) return;
-    router.push(`/results?mode=warm&user=${user.user_id}&q=${encodeURIComponent(query)}`);
+    router.push(`/results?mode=warm&user=${effectiveUserId}&q=${encodeURIComponent(query)}`);
   };
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-2xl sm:flex-row sm:items-center">
+      <div className="border-gradient glass flex flex-col gap-3 rounded-2xl p-4 shadow-2xl sm:flex-row sm:items-center">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && go()}
-          placeholder="what are you in the mood for?"
+          placeholder={LIVE_MODE ? "ask for anything — this is live" : "what are you in the mood for?"}
           aria-label="Query"
           className="flex-1 bg-transparent px-2 py-2 text-base outline-none placeholder:text-text-faint"
         />
         <button
           onClick={go}
-          className="flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dim"
+          className="glow-accent glow-accent-hover flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-indigo-500 px-5 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110"
         >
           Recommend <ArrowRight size={15} />
         </button>
@@ -82,9 +84,21 @@ function WarmSearch() {
           <Tooltip label="Retrieval is personalized: the user's watch history drives the taste embedding that searches the index. The query only enters at the rerank stage.">
             viewing as user
           </Tooltip>
-          <span className="font-mono text-text">#{user.user_id}</span>
+          {LIVE_MODE ? (
+            <input
+              value={customUserId ?? String(user.user_id)}
+              onChange={(e) => setCustomUserId(e.target.value.replace(/\D/g, ""))}
+              aria-label="User ID"
+              className="w-20 rounded-md border border-border bg-card px-2 py-0.5 font-mono text-text outline-none focus:border-accent"
+            />
+          ) : (
+            <span className="font-mono text-text">#{user.user_id}</span>
+          )}
           <button
-            onClick={() => setUserIdx((userIdx + 1) % demoUsers.length)}
+            onClick={() => {
+              setUserIdx((userIdx + 1) % demoUsers.length);
+              setCustomUserId(null);
+            }}
             aria-label="Shuffle demo user"
             className="rounded-md border border-border p-1 text-text-dim transition-colors hover:border-border-strong hover:text-text"
           >
@@ -94,8 +108,9 @@ function WarmSearch() {
       </div>
 
       <p className="mt-2 text-right font-mono text-[11px] text-text-faint">
-        {user.num_ratings.toLocaleString()} ratings · top genres:{" "}
-        {Object.keys(user.genre_distribution).slice(0, 3).join(", ")}
+        {customUserId === null || customUserId === String(user.user_id)
+          ? `${user.num_ratings.toLocaleString()} ratings · top genres: ${Object.keys(user.genre_distribution).slice(0, 3).join(", ")}`
+          : "custom user — any of the 138,493 trained users works live"}
       </p>
     </div>
   );
@@ -138,9 +153,12 @@ function ColdStart() {
     <div className="w-full max-w-2xl text-left">
       <p className="mb-3 text-sm text-text-dim">
         No account needed — the user tower pools the embeddings of a few movies you pick.{" "}
-        <span className="text-text-faint">
-          The static demo replays the two recorded scenarios; custom picks need the live backend.
-        </span>
+        {!LIVE_MODE && (
+          <span className="text-text-faint">
+            The static demo replays the two recorded scenarios; custom picks need the live backend.
+          </span>
+        )}
+        {LIVE_MODE && <span className="text-success">Live mode: pick any movies you like.</span>}
       </p>
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
@@ -244,7 +262,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl"
+          className="text-gradient max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl"
         >
           What should I watch tonight?
         </motion.h1>
@@ -282,9 +300,11 @@ export default function Home() {
           <motion.div key={title} whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
             <Link
               href={href}
-              className="flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-border-strong"
+              className="border-gradient glass glow-accent-hover flex h-full flex-col gap-2 rounded-2xl p-5 transition-all"
             >
-              <Icon size={18} className="text-accent" />
+              <span className="glow-accent flex h-8 w-8 items-center justify-center rounded-lg bg-accent-faint">
+                <Icon size={16} className="text-accent" />
+              </span>
               <h3 className="text-sm font-semibold">{title}</h3>
               <p className="text-xs leading-relaxed text-text-dim">{body}</p>
             </Link>

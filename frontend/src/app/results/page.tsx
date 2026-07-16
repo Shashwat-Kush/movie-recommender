@@ -23,10 +23,10 @@ function PipelineBar({ response }: { response: RecommendResponse }) {
     { name: "llm rerank", ms: timing.rerank_ms },
   ];
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-card px-4 py-2.5">
+    <div className="border-gradient glass mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl px-4 py-2.5">
       {stages.map((s, i) => (
         <span key={s.name} className="flex items-center gap-2 text-xs">
-          {i > 0 && <span className="text-text-faint">→</span>}
+          {i > 0 && <span className="text-accent/60">→</span>}
           <span className="text-text-dim">{s.name}</span>
           {s.ms !== null && <span className="font-mono text-text">{fmtMs(s.ms)}</span>}
         </span>
@@ -51,10 +51,10 @@ function MovieCard({ movie, rank }: { movie: MovieRecommendation; rank: number }
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.06, duration: 0.25 }}
       whileHover={{ y: -3 }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-border-strong"
+      className="border-gradient glass glow-accent-hover flex flex-col overflow-hidden rounded-2xl transition-all"
     >
-      <div className="relative flex aspect-[2/3] items-end bg-gradient-to-br from-accent-faint via-card to-bg p-4">
-        <span className="absolute left-3 top-3 rounded-md bg-bg/80 px-2 py-0.5 font-mono text-xs text-accent">
+      <div className="relative flex aspect-[2/3] items-end bg-[radial-gradient(circle_at_20%_15%,rgba(139,92,246,0.22),transparent_55%),radial-gradient(circle_at_85%_90%,rgba(99,102,241,0.14),transparent_50%)] p-4">
+        <span className="glow-accent absolute left-3 top-3 rounded-md bg-bg/80 px-2 py-0.5 font-mono text-xs text-accent">
           #{rank}
         </span>
         <h3 className="text-lg font-semibold leading-snug tracking-tight">{titleOnly(movie.title)}</h3>
