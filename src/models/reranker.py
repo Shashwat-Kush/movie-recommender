@@ -52,35 +52,44 @@ User Query: "{query}"
 Candidates:
 {movie_block}
 
-Return a JSON array of objects with "index" (0-based position in candidates) and "score" (1-10 relevance).
-Only include movies you would recommend. Sort by score descending.
-Example: [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]"""
+Return a JSON object of the form {{"rankings": [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]}}
+where "index" is the 0-based position in candidates and "score" is 1-10 relevance.
+Only include movies you would recommend. Sort by score descending. No prose, JSON only."""
 
         return prompt
 
     def _parse_response(self, response_text: str, num_candidates: int) -> List[Dict[str, Any]]:
-        """Parse LLM response into list of (index, score) pairs."""
+        """Parse LLM response into list of (index, score) pairs.
+
+        Expects {"rankings": [...]} (JSON mode), but also accepts a bare array and,
+        as a last resort, salvages complete {"index": i, "score": s} objects from
+        truncated or prose-wrapped output instead of discarding the whole response.
+        """
+        pairs = []
         try:
-            json_match = re.search(r"\[.*\]", response_text, re.DOTALL)
-            if json_match:
-                parsed = json.loads(json_match.group())
-            else:
-                parsed = json.loads(response_text)
-
-            results = []
+            parsed = json.loads(response_text)
+            if isinstance(parsed, dict):
+                parsed = next((v for v in parsed.values() if isinstance(v, list)), [])
             for item in parsed:
-                idx = item.get("index")
-                score = item.get("score")
-                if isinstance(idx, int) and isinstance(score, (int, float)):
-                    if 0 <= idx < num_candidates:
-                        results.append({"index": idx, "score": float(score)})
+                if isinstance(item, dict):
+                    pairs.append((item.get("index"), item.get("score")))
+        except json.JSONDecodeError:
+            salvaged = re.findall(
+                r'\{\s*"index"\s*:\s*(\d+)\s*,\s*"score"\s*:\s*(\d+(?:\.\d+)?)\s*\}', response_text
+            )
+            if not salvaged:
+                print("Warning: Failed to parse LLM response and nothing salvageable")
+                return []
+            print(f"Warning: LLM response was not valid JSON; salvaged {len(salvaged)} entries")
+            pairs = [(int(i), float(s)) for i, s in salvaged]
 
-            results.sort(key=lambda x: x["score"], reverse=True)
-            return results
+        results = []
+        for idx, score in pairs:
+            if isinstance(idx, int) and isinstance(score, (int, float)) and 0 <= idx < num_candidates:
+                results.append({"index": idx, "score": float(score)})
 
-        except (json.JSONDecodeError, AttributeError, KeyError) as e:
-            print(f"Warning: Failed to parse LLM response: {e}")
-            return []
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return results
 
     def _rerank_batch(
         self,
@@ -102,6 +111,7 @@ Example: [{{"index": 0, "score": 9}}, {{"index": 2, "score": 7}}]"""
                 ],
                 temperature=0.1,
                 max_tokens=4096,
+                response_format={"type": "json_object"},
             )
 
             response_text = response.choices[0].message.content or ""

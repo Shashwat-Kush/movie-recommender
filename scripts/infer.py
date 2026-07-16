@@ -149,12 +149,52 @@ def load_reranker_config(config_path: str = "configs/reranker.yaml") -> dict:
     return {}
 
 
+def get_seen_movie_ids(splits_dir: Path, user_id: int) -> set:
+    """MovieIds the user already rated (LOO train+val) — never re-recommend these."""
+    seen = set()
+    for name in ("train_loo.parquet", "val_loo.parquet"):
+        path = splits_dir / name
+        if path.exists():
+            table = ds.dataset(path).scanner(
+                columns=["movieId"], filter=ds.field("userId") == user_id
+            ).to_table()
+            seen.update(table.column("movieId").to_pylist())
+    return seen
+
+
+def blend_popularity(
+    indices: np.ndarray,
+    distances: np.ndarray,
+    splits_dir: Path,
+    popularity_weight: float,
+) -> np.ndarray:
+    """Re-rank HNSW candidates by cosine + popularity_weight * log(pop_count + 1).
+
+    The engine returns distance = -dot(query, item). The in-batch softmax model learns
+    popularity-corrected preferences, so raw cosine under-recommends popular movies;
+    the log-popularity bonus adds that signal back (see configs/retrieval.yaml).
+    Returns candidate indices sorted best-first.
+    """
+    counts_path = splits_dir / "popularity_counts.npy"
+    if popularity_weight <= 0 or not counts_path.exists():
+        if popularity_weight > 0:
+            print(f"  Warning: {counts_path} not found (run scripts/evaluate.py); skipping popularity blend")
+        return indices
+    pop_counts = np.load(counts_path)
+    scores = -distances + popularity_weight * np.log(pop_counts[indices] + 1.0)
+    return indices[np.argsort(-scores)]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Movie recommendation inference pipeline")
     parser.add_argument("--query", type=str, required=True, help="User query text")
     parser.add_argument("--user-id", type=int, required=True, help="User ID for personalization")
     parser.add_argument("--top-k", type=int, default=5, help="Final number of recommendations")
-    parser.add_argument("--retrieval-k", type=int, default=50, help="HNSW retrieval candidates")
+    parser.add_argument(
+        "--retrieval-k", type=int, default=500,
+        help="HNSW candidate pool; must be large so the popularity blend can lift items "
+             "from deep in the cosine ranking (top 50 after blending go to the reranker)",
+    )
     parser.add_argument("--ef-search", type=int, default=100, help="HNSW ef_search parameter")
     parser.add_argument(
         "--checkpoint",
@@ -240,8 +280,20 @@ def main():
     )
     print(f"  Retrieved {len(indices)} candidates")
 
+    retrieval_cfg = load_config("configs/retrieval.yaml") if Path("configs/retrieval.yaml").exists() else {}
+    indices = blend_popularity(
+        indices, distances, splits_dir,
+        popularity_weight=float(retrieval_cfg.get("popularity_weight", 0.0)),
+    )
+
     # Index positions are movie_map indices (see scripts/build_index.py).
-    candidate_movie_ids = [idx_to_movie_id[int(idx)] for idx in indices]
+    # Drop movies the user already rated, then keep the reranker prompt budget.
+    seen = get_seen_movie_ids(splits_dir, args.user_id)
+    candidate_movie_ids = [
+        mid for idx in indices
+        if (mid := idx_to_movie_id[int(idx)]) not in seen
+    ][:50]
+    print(f"  {len(candidate_movie_ids)} candidates after filtering {len(seen)} already-rated movies")
 
     print("Loading movie metadata...")
     movies_meta = load_movie_metadata(Path(args.movies_parquet), candidate_movie_ids)

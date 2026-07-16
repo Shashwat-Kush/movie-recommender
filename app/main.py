@@ -164,6 +164,19 @@ def search_hnsw(
     return np.array(indices), np.array(distances)
 
 
+def get_seen_movie_ids(splits_dir: Path, user_id: int) -> set:
+    """MovieIds the user already rated (LOO train+val) — never re-recommend these."""
+    seen = set()
+    for name in ("train_loo.parquet", "val_loo.parquet"):
+        path = splits_dir / name
+        if path.exists():
+            table = ds.dataset(path).scanner(
+                columns=["movieId"], filter=ds.field("userId") == user_id
+            ).to_table()
+            seen.update(table.column("movieId").to_pylist())
+    return seen
+
+
 def load_reranker_config(config_path: str = "configs/reranker.yaml") -> dict:
     if Path(config_path).exists():
         with open(config_path, "r") as f:
@@ -185,6 +198,20 @@ async def startup():
 
     _, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
     print(f"Loaded {len(idx_to_movie_id):,} movies (training)")
+
+    # Popularity blend (see configs/retrieval.yaml): rank candidates by
+    # cosine + popularity_weight * log(pop_count + 1). Counts are written by
+    # scripts/evaluate.py in movie_map index order.
+    retrieval_cfg = load_config("configs/retrieval.yaml") if Path("configs/retrieval.yaml").exists() else {}
+    _model_cache["popularity_weight"] = float(retrieval_cfg.get("popularity_weight", 0.0))
+    _model_cache["candidate_pool"] = int(retrieval_cfg.get("candidate_pool", 500))
+    counts_path = splits_dir / "popularity_counts.npy"
+    if counts_path.exists():
+        _model_cache["log_pop"] = np.log(np.load(counts_path) + 1.0)
+    else:
+        _model_cache["log_pop"] = None
+        if _model_cache["popularity_weight"] > 0:
+            print(f"Warning: {counts_path} not found (run scripts/evaluate.py); popularity blend disabled")
 
     n_users = len(user_mapping)
     n_items = len(idx_to_movie_id)
@@ -217,12 +244,24 @@ async def recommend(request: RecommendRequest):
     indices, distances = search_hnsw(
         Path("cpp/build_arm64/index.bin"),
         query_vec,
-        k=50,
+        k=_model_cache["candidate_pool"],
         ef_search=100,
     )
 
+    # Blend popularity into retrieval scores (engine distance = -dot).
+    log_pop = _model_cache["log_pop"]
+    w = _model_cache["popularity_weight"]
+    if log_pop is not None and w > 0:
+        scores = -distances + w * log_pop[indices]
+        indices = indices[np.argsort(-scores)]
+
     # Index positions are movie_map indices (see scripts/build_index.py).
-    candidate_movie_ids = [idx_to_movie_id[int(idx)] for idx in indices]
+    # Drop movies the user already rated, then keep the reranker prompt budget.
+    seen = get_seen_movie_ids(splits_dir, request.user_id)
+    candidate_movie_ids = [
+        mid for idx in indices
+        if (mid := idx_to_movie_id[int(idx)]) not in seen
+    ][:50]
 
     movies_meta = load_movie_metadata(Path("data/parquet/movies"), candidate_movie_ids)
 
