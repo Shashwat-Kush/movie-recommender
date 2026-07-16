@@ -197,6 +197,17 @@ async def startup():
         if _model_cache["popularity_weight"] > 0:
             print(f"Warning: {counts_path} not found (run scripts/evaluate.py); popularity blend disabled")
 
+    # Precomputed per-user seen movieIds (written by scripts/evaluate.py) — avoids
+    # a 20M-row parquet scan on the first request for each user.
+    seen_path = splits_dir / "seen_items.npz"
+    if seen_path.exists():
+        seen_npz = np.load(seen_path)
+        _model_cache["seen_table"] = (seen_npz["offsets"], seen_npz["movie_ids"])
+        print(f"Loaded seen-items table ({len(seen_npz['movie_ids']):,} interactions)")
+    else:
+        _model_cache["seen_table"] = None
+        print(f"Note: {seen_path} not found (run scripts/evaluate.py); falling back to per-request parquet scans")
+
     checkpoint_path = Path("checkpoints/two_tower_history/best_model.pt")
     load_query_embedding_model(checkpoint_path, len(idx_to_movie_id), device)
 
@@ -240,12 +251,18 @@ async def recommend(request: RecommendRequest):
     # Cached per user: the splits are static offline data, so no invalidation needed.
     seen_cache = _model_cache.setdefault("seen_cache", {})
     if request.user_id not in seen_cache:
-        seen_cache[request.user_id] = get_seen_movie_ids(splits_dir, request.user_id)
+        seen_table = _model_cache.get("seen_table")
+        if seen_table is not None:
+            offsets, movie_ids = seen_table
+            uidx = user_mapping[request.user_id]
+            seen_cache[request.user_id] = set(movie_ids[offsets[uidx] : offsets[uidx + 1]].tolist())
+        else:
+            seen_cache[request.user_id] = get_seen_movie_ids(splits_dir, request.user_id)
     seen = seen_cache[request.user_id]
     candidate_movie_ids = [
         mid for idx in indices
         if (mid := idx_to_movie_id[int(idx)]) not in seen
-    ][:50]
+    ][:25]  # reranker token budget: the tail of the list is not where reranking earns anything
 
     movies_meta = load_movie_metadata(Path("data/parquet/movies"), candidate_movie_ids)
 

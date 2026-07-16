@@ -152,6 +152,28 @@ def load_seen_items(
     return seen_dict, pop_counts
 
 
+def save_seen_artifact(seen_dict: dict, item_mapping: dict, n_users: int, path: Path) -> None:
+    """Save per-user seen movieIds as flat CSR-style arrays (offsets + movie_ids).
+
+    Serving loads this once at startup instead of scanning 20M parquet rows per
+    new user: user u's seen movieIds are movie_ids[offsets[u]:offsets[u+1]].
+    """
+    inv = np.zeros(len(item_mapping), dtype=np.int32)
+    for mid, idx in item_mapping.items():
+        inv[idx] = mid
+
+    offsets = np.zeros(n_users + 1, dtype=np.int64)
+    for u, items in seen_dict.items():
+        offsets[u + 1] = len(items)
+    np.cumsum(offsets, out=offsets)
+
+    flat = np.zeros(offsets[-1], dtype=np.int32)
+    for u, items in seen_dict.items():
+        flat[offsets[u] : offsets[u + 1]] = inv[items]
+
+    np.savez(path, offsets=offsets, movie_ids=flat)
+
+
 def compute_metrics(
     user_embeddings: np.ndarray,
     item_embeddings: np.ndarray,
@@ -289,9 +311,10 @@ def main():
     print("Loading seen items (for masking) and popularity counts...")
     seen_dict, pop_counts = load_seen_items(splits_dir, user_mapping, item_mapping)
 
-    # Serving artifact: infer.py / app load these counts to apply the same
-    # popularity blend at retrieval time (movie_map index order).
+    # Serving artifacts: popularity counts for the optional blend (movie_map index
+    # order) and the per-user seen-items table for fast seen-movie filtering.
     np.save(splits_dir / "popularity_counts.npy", pop_counts)
+    save_seen_artifact(seen_dict, item_mapping, len(user_mapping), splits_dir / "seen_items.npz")
 
     print("Computing metrics...")
     metrics = compute_metrics(

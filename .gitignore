@@ -45,3 +45,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Reranker response cache (regenerable, keyed by prompt hash)
+outputs/reranker_cache/

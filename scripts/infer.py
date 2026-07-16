@@ -123,8 +123,18 @@ def load_reranker_config(config_path: str = "configs/reranker.yaml") -> dict:
     return {}
 
 
-def get_seen_movie_ids(splits_dir: Path, user_id: int) -> set:
-    """MovieIds the user already rated (LOO train+val) — never re-recommend these."""
+def get_seen_movie_ids(splits_dir: Path, user_id: int, user_idx: int = None) -> set:
+    """MovieIds the user already rated (LOO train+val) — never re-recommend these.
+
+    Uses the precomputed seen_items.npz table (written by scripts/evaluate.py) when
+    available; otherwise falls back to scanning the split parquet files.
+    """
+    seen_path = splits_dir / "seen_items.npz"
+    if user_idx is not None and seen_path.exists():
+        npz = np.load(seen_path)
+        offsets, movie_ids = npz["offsets"], npz["movie_ids"]
+        return set(movie_ids[offsets[user_idx] : offsets[user_idx + 1]].tolist())
+
     seen = set()
     for name in ("train_loo.parquet", "val_loo.parquet"):
         path = splits_dir / name
@@ -252,11 +262,11 @@ def main():
 
     # Index positions are movie_map indices (see scripts/build_index.py).
     # Drop movies the user already rated, then keep the reranker prompt budget.
-    seen = get_seen_movie_ids(splits_dir, args.user_id)
+    seen = get_seen_movie_ids(splits_dir, args.user_id, user_idx=user_mapping.get(args.user_id))
     candidate_movie_ids = [
         mid for idx in indices
         if (mid := idx_to_movie_id[int(idx)]) not in seen
-    ][:50]
+    ][:25]  # reranker token budget: the tail of the list is not where reranking earns anything
     print(f"  {len(candidate_movie_ids)} candidates after filtering {len(seen)} already-rated movies")
 
     print("Loading movie metadata...")
