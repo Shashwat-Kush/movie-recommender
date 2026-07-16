@@ -6,6 +6,56 @@ served over FastAPI.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
+## The model
+
+The served retrieval model is a **history-based Two-Tower** trained with **in-batch sampled
+softmax** (InfoNCE, temperature 0.05) and **logQ correction**:
+
+- **User tower**: the mean of the item-embedding rows for the user's 20 most recent liked
+  movies (rating ≥ 3.5), through a 3-layer MLP. No per-user parameters — the model serves
+  any user with a watch history and reacts to new watches without retraining.
+- **Item tower**: item-ID embedding concatenated with a 128-dim MiniLM metadata embedding
+  (title/genres/tags), through its own MLP. Both outputs are L2-normalized; the score is
+  their dot product.
+- **Loss**: every other in-batch item acts as a popularity-distributed negative. Cosine
+  logits are divided by a temperature (bounded logits fed straight into a loss saturate and
+  stop learning — the original BCE-on-cosine setup failed exactly this way). Subtracting
+  each item's log sampling probability (logQ) debiases the softmax so raw cosine ranks by
+  likelihood — no serving-time popularity correction needed.
+- **Protocol**: trained on `train_loo` (each user's history minus the last two interactions);
+  the training positive is excluded from its own user's history to prevent label leakage;
+  only ratings ≥ 3.5 count as positives.
+
+## Results
+
+Leave-one-out over all 138,493 users, movies the user already rated masked before top-K,
+K = 10 (`outputs/eval_loo*.json`):
+
+| Model | Recall@10 | NDCG@10 |
+|---|---|---|
+| Popularity baseline | 4.86% | 2.48% |
+| Implicit MF / BPR (3 epochs) | 6.45% | 3.31% |
+| ID-embedding Two-Tower, raw cosine | 4.51% | 2.16% |
+| ID-embedding Two-Tower + tuned popularity blend (w=0.1) | 9.57% | 4.77% |
+| **History Two-Tower + logQ (served), raw cosine** | **9.53%** | **4.70%** |
+
+The last two are statistically tied, but the history+logQ model has no per-user parameters
+(85MB smaller), no hand-tuned serving knob, and converged in half the epochs.
+
+**Temporal robustness** (`scripts/evaluate_timesplit.py`) — recall by the period of the
+held-out interaction: 9.85% before 2009, 9.10% in 2009–2012, 8.28% in 2012–2016; ~2× the
+popularity baseline in every window. (The LOO protocol trains on all periods, so this
+measures robustness to recency, not strict train-on-past generalization.)
+
+**Cold-start** (`scripts/evaluate_cold_start.py`) — with 20% of items embedded via the
+metadata-only cold path, recall on those items collapses to 0.13% vs 10.56% warm for the
+same users: the item tower never trained with a zeroed ID embedding, so the cold path is
+currently decorative. Fixing it needs training-time ID-embedding dropout.
+
+**Reranker A/B** (`scripts/evaluate_reranker.py`, 200 users) — Groq reranking of the
+retrieval top candidates moves recall@10 from 7.0% to 7.5% and NDCG from 3.88 to 4.22:
+a small lift, within noise at this sample size.
+
 ## How it fits together
 
 ```
@@ -50,14 +100,20 @@ PYTHONPATH=. python3 -m src.data.splits
 # 2. Cold-start metadata embeddings  (only needed once)
 PYTHONPATH=. python3 scripts/generate_cold_start.py
 
-# 3. Train Two-Tower  (writes checkpoints/two_tower/best_model.pt)
-PYTHONPATH=. python3 -u scripts/train_all.py --model two_tower
+# 3. Train  (writes checkpoints/two_tower_history/best_model.pt; --resume continues
+#    from the latest epoch checkpoint after an interruption)
+PYTHONPATH=. PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python3 -u scripts/train_all.py --model two_tower_history
 
 # 4. Build the HNSW index from the trained model
-PYTHONPATH=. python3 scripts/build_index.py --checkpoint checkpoints/two_tower/best_model.pt
+PYTHONPATH=. python3 scripts/build_index.py --checkpoint checkpoints/two_tower_history/best_model.pt
 
-# 5. Evaluate  (writes outputs/eval_loo.json)
-PYTHONPATH=. python3 scripts/evaluate.py
+# 5. Evaluate  (writes outputs/eval_loo.json + the serving artifacts
+#    popularity_counts.npy and seen_items.npz)
+PYTHONPATH=. python3 scripts/evaluate.py --checkpoint checkpoints/two_tower_history/best_model.pt
+PYTHONPATH=. python3 scripts/evaluate_timesplit.py     # recall by time period
+PYTHONPATH=. python3 scripts/evaluate_cold_start.py    # pseudo-cold item protocol
+PYTHONPATH=. python3 scripts/evaluate_reranker.py      # retrieval vs Groq-reranked A/B
+PYTHONPATH=. python3 scripts/evaluate_mf.py            # BPR baseline
 
 # 6. Serve
 python3 -m uvicorn app.main:app --port 8000
@@ -65,6 +121,10 @@ curl -X POST http://localhost:8000/recommend \
   -H "Content-Type: application/json" \
   -d '{"user_id": 1, "query": "funny action movies", "top_k": 5}'
 ```
+
+`PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` matters on 8GB machines: training fits comfortably,
+but Metal's default working-set cap counts *other apps'* memory, and the ~70MB embedding-
+gradient allocation gets refused when the system is busy.
 
 Use `python3 -u` for training — stdout is block-buffered when redirected to a log, and at
 ~60 bytes per progress line you won't see output for several epochs otherwise.
@@ -110,6 +170,17 @@ from the scripts above.
 ## Notes
 
 - `best.pt` (with optimizer state) is for resuming; `best_model.pt` (weights + config) is what
-  `evaluate.py`, `build_index.py`, `infer.py`, and the API load.
+  `evaluate.py`, `build_index.py`, `infer.py`, and the API load. Loaders construct the right
+  model class (ID-based or history-based) from the checkpoint's saved config.
+- Serving retrieves 500 HNSW candidates, filters out movies the user already rated (via the
+  precomputed `seen_items.npz`), and sends the top 25 to the reranker.
+- `popularity_weight` in `configs/retrieval.yaml` is 0 for the served logQ-corrected model
+  (any blend makes it worse); set it to ~0.1 only for checkpoints trained without
+  `logq_correction`.
+- The Groq reranker is token-frugal (free tier is 500K tokens/day): 25 candidates,
+  title+genres only, compact index-list output capped at 512 tokens, responses disk-cached
+  by prompt hash (`outputs/reranker_cache/`), and 429s retried with exponential backoff. It
+  falls back to retrieval order if Groq still fails.
 - Matrix Factorization exists as a baseline but nothing in the serving path uses it.
-- The reranker falls back to raw HNSW ordering if Groq fails or returns unparseable JSON.
+- Cold-start serving (`get_item_embeddings_cold`) is measurably broken until the model is
+  retrained with ID-embedding dropout — see Results.
