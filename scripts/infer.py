@@ -16,8 +16,9 @@ import pyarrow.parquet as pq
 import pandas as pd
 import pandas as pd
 
-from src.models.two_tower import TwoTowerWithMetadata
 from src.models.reranker import GroqReranker, create_reranker
+# Constructs the right model class (ID-based or history-based) from checkpoint config.
+from scripts.evaluate import load_model as load_two_tower_checkpoint
 
 
 def load_config(config_path: str) -> dict:
@@ -69,35 +70,8 @@ def load_movie_metadata(movies_parquet_dir: Path, movie_ids: List[int]) -> List[
     return results
 
 
-def load_query_embedding_model(
-    checkpoint_path: Path,
-    n_users: int,
-    n_items: int,
-    metadata_dim: int,
-    device: torch.device,
-) -> TwoTowerWithMetadata:
-    """Load trained TwoTowerWithMetadata model for query embedding."""
-    model = TwoTowerWithMetadata(
-        n_users=n_users,
-        n_items=n_items,
-        metadata_dim=metadata_dim,
-        embedding_dim=128,
-        hidden_dim=256,
-        output_dim=128,
-        dropout=0.1,
-    )
-
-    state = torch.load(checkpoint_path, map_location=device)
-    # Handle both formats: direct state_dict or checkpoint dict with 'model_state_dict'
-    state_dict = state.get("model_state_dict", state)
-    model.load_state_dict(state_dict)
-    model.to(device)
-    model.eval()
-    return model
-
-
 def get_query_embedding(
-    model: TwoTowerWithMetadata,
+    model,
     user_id: int,
     user_mapping: Dict[int, int],
     device: torch.device,
@@ -199,7 +173,7 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="checkpoints/two_tower/best_model.pt",
+        default="checkpoints/two_tower_history/best_model.pt",
         help="Path to Two-Tower checkpoint",
     )
     parser.add_argument(
@@ -254,18 +228,8 @@ def main():
     _, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
     print(f"  Loaded {len(idx_to_movie_id):,} movies (training)")
 
-    n_users = len(user_mapping)
-    n_items_model = len(idx_to_movie_id)
-
     print("Loading Two-Tower model...")
-    metadata_dim = 128
-    model = load_query_embedding_model(
-        Path(args.checkpoint),
-        n_users=n_users,
-        n_items=n_items_model,
-        metadata_dim=metadata_dim,
-        device=device,
-    )
+    model, _ = load_two_tower_checkpoint(Path(args.checkpoint), device)
 
     print(f"Encoding query for user {args.user_id}...")
     query_vec = get_query_embedding(model, args.user_id, user_mapping, device)

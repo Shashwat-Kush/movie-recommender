@@ -12,7 +12,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.data.cold_start import build_aligned_metadata
-from src.models.two_tower import TwoTowerWithMetadata
+from src.models.two_tower import TwoTowerWithMetadata, TwoTowerHistory
 
 
 def load_config(config_path: str) -> dict:
@@ -20,13 +20,12 @@ def load_config(config_path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def load_model(checkpoint_path: Path, device: torch.device) -> tuple[TwoTowerWithMetadata, dict]:
+def load_model(checkpoint_path: Path, device: torch.device):
     checkpoint = torch.load(checkpoint_path, map_location=device)
     ckpt_config = checkpoint.get("config", {})
 
     # Fallback: infer from state_dict if checkpoint config is incomplete (e.g., old best.pt)
     state_dict = checkpoint.get("model_state_dict", checkpoint)
-    n_users = ckpt_config.get("n_users") or state_dict.get("user_embedding.weight", torch.empty(0)).shape[0]
     n_items = ckpt_config.get("n_items") or state_dict.get("item_embedding.weight", torch.empty(0)).shape[0]
     metadata_dim = ckpt_config.get("metadata_dim") or state_dict.get("item_metadata_proj.weight", torch.empty(0)).shape[1]
     embedding_dim = ckpt_config.get("embedding_dim", 128)
@@ -34,17 +33,28 @@ def load_model(checkpoint_path: Path, device: torch.device) -> tuple[TwoTowerWit
     output_dim = ckpt_config.get("output_dim", 128)
     dropout = ckpt_config.get("dropout", 0.1)
 
-    model = TwoTowerWithMetadata(
-        n_users=n_users,
-        n_items=n_items,
-        metadata_dim=metadata_dim,
-        embedding_dim=embedding_dim,
-        hidden_dim=hidden_dim,
-        output_dim=output_dim,
-        dropout=dropout,
-    )
+    if ckpt_config.get("model_type") == "two_tower_history" or "user_history" in state_dict:
+        model = TwoTowerHistory(
+            n_items=n_items,
+            metadata_dim=metadata_dim,
+            history=torch.zeros_like(state_dict["user_history"]),  # filled by load_state_dict
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+            dropout=dropout,
+        )
+    else:
+        n_users = ckpt_config.get("n_users") or state_dict.get("user_embedding.weight", torch.empty(0)).shape[0]
+        model = TwoTowerWithMetadata(
+            n_users=n_users,
+            n_items=n_items,
+            metadata_dim=metadata_dim,
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+            dropout=dropout,
+        )
 
-    state_dict = checkpoint.get("model_state_dict", checkpoint)
     model.load_state_dict(state_dict, strict=True)
     model.to(device)
     model.eval()
@@ -63,15 +73,23 @@ def load_item_mapping(mapping_path: Path) -> dict:
     return dict(zip(table.column("movieId").to_pylist(), table.column("movie_idx").to_pylist()))
 
 
-def get_user_embeddings(model: TwoTowerWithMetadata, user_mapping: dict, device: torch.device) -> np.ndarray:
-    """Get embeddings for all users in mapping."""
-    user_ids = list(user_mapping.values())
-    user_tensor = torch.tensor(user_ids, dtype=torch.long, device=device)
+def get_user_embeddings(
+    model,
+    user_mapping: dict,
+    device: torch.device,
+    batch_size: int = 8192,
+) -> np.ndarray:
+    """Get embeddings for all users in mapping (chunked: the history model gathers
+    a (B, K, dim) tensor per batch, which is too large for all users at once)."""
+    user_ids = np.fromiter(user_mapping.values(), dtype=np.int64)
+    out = np.zeros((len(user_ids), model.output_dim), dtype=np.float32)
 
     with torch.no_grad():
-        embeddings = model.get_user_embeddings(user_tensor)
+        for start in range(0, len(user_ids), batch_size):
+            chunk = torch.from_numpy(user_ids[start : start + batch_size]).to(device)
+            out[start : start + batch_size] = model.get_user_embeddings(chunk).cpu().numpy()
 
-    return embeddings.cpu().numpy().astype(np.float32)
+    return out
 
 
 def compute_item_embeddings(

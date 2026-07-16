@@ -95,28 +95,13 @@ def main():
     # If checkpoint provided, load model and generate embeddings
     if args.checkpoint and Path(args.checkpoint).exists():
         print("Loading checkpoint to extract item embeddings...")
-        
-        # Load checkpoint to get n_users and n_items
-        checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
-        if "model_state_dict" in checkpoint:
-            state_dict = checkpoint["model_state_dict"]
-        else:
-            state_dict = checkpoint
-        
-        # Infer n_users from user_embedding weight shape
-        user_emb_weight = state_dict.get("user_embedding.weight")
-        if user_emb_weight is not None:
-            n_users = user_emb_weight.shape[0]
-        else:
-            n_users = 162541  # ML-25M default
-        
-        # Infer n_items from item_embedding weight shape (checkpoint was trained on this many items)
-        item_emb_weight = state_dict.get("item_embedding.weight")
-        if item_emb_weight is not None:
-            n_items = item_emb_weight.shape[0]
-            print(f"Checkpoint n_items: {n_items}")
-        else:
-            n_items = item_metadata_np.shape[0]
+
+        # Constructs the right model class (ID-based or history-based) from
+        # checkpoint config.
+        from scripts.evaluate import load_model
+
+        model, ckpt_config = load_model(Path(args.checkpoint), device)
+        n_items = model.item_embedding.weight.shape[0]
 
         if n_items != item_metadata_np.shape[0]:
             raise ValueError(
@@ -126,21 +111,7 @@ def main():
                 "misaligns every index position)."
             )
 
-        print(f"Inferred n_users={n_users}, n_items={n_items}, metadata_dim={metadata_dim}")
-
-        ckpt_config = checkpoint.get("config", {}) if isinstance(checkpoint, dict) else {}
-        model = TwoTowerWithMetadata(
-            n_users=n_users,
-            n_items=n_items,
-            metadata_dim=metadata_dim,
-            embedding_dim=ckpt_config.get("embedding_dim", 128),
-            hidden_dim=ckpt_config.get("hidden_dim", 256),
-            output_dim=ckpt_config.get("output_dim", 128),
-            dropout=ckpt_config.get("dropout", 0.1),
-        )
-        model.load_state_dict(state_dict)
-        model.to(device)
-        model.eval()
+        print(f"Checkpoint: {type(model).__name__}, n_items={n_items}, metadata_dim={metadata_dim}")
 
         # Warm path (item ID + metadata) — must match scripts/evaluate.py, otherwise we
         # measure one set of embeddings and serve another.

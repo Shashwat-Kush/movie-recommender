@@ -18,7 +18,6 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent.parent))
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from src.models.two_tower import TwoTowerWithMetadata
 from src.models.reranker import GroqReranker, create_reranker
 
 
@@ -94,43 +93,28 @@ def load_movie_metadata(movies_parquet_dir: Path, movie_ids: List[int]) -> List[
 
 def load_query_embedding_model(
     checkpoint_path: Path,
-    n_users: int,
     n_items: int,
-    metadata_dim: int,
     device: torch.device,
-) -> TwoTowerWithMetadata:
+):
     if "model" not in _model_cache:
-        checkpoint = torch.load(checkpoint_path, map_location=device)
-        ckpt_config = checkpoint.get("config", {})
-        ckpt_n_items = ckpt_config.get("n_items", n_items)
+        # Constructs the right model class (ID-based or history-based) from
+        # checkpoint config.
+        from scripts.evaluate import load_model
 
+        model, ckpt_config = load_model(checkpoint_path, device)
+        ckpt_n_items = ckpt_config.get("n_items", n_items)
         if ckpt_n_items != n_items:
             raise RuntimeError(
                 f"Checkpoint has {ckpt_n_items} items but movie_mapping.parquet has {n_items}. "
                 "The mapping changed since training — retrain rather than reshaping the "
                 "embedding table, which would desync it from the HNSW index."
             )
-
-        model = TwoTowerWithMetadata(
-            n_users=n_users,
-            n_items=ckpt_n_items,
-            metadata_dim=metadata_dim,
-            embedding_dim=ckpt_config.get("embedding_dim", 128),
-            hidden_dim=ckpt_config.get("hidden_dim", 256),
-            output_dim=ckpt_config.get("output_dim", 128),
-            dropout=ckpt_config.get("dropout", 0.1),
-        )
-        state_dict = checkpoint.get("model_state_dict", checkpoint)
-        model.load_state_dict(state_dict, strict=True)
-
-        model.to(device)
-        model.eval()
         _model_cache["model"] = model
     return _model_cache["model"]
 
 
 def get_query_embedding(
-    model: TwoTowerWithMetadata,
+    model,
     user_id: int,
     user_mapping: Dict[int, int],
     device: torch.device,
@@ -213,12 +197,8 @@ async def startup():
         if _model_cache["popularity_weight"] > 0:
             print(f"Warning: {counts_path} not found (run scripts/evaluate.py); popularity blend disabled")
 
-    n_users = len(user_mapping)
-    n_items = len(idx_to_movie_id)
-    metadata_dim = 128
-
-    checkpoint_path = Path("checkpoints/two_tower/best_model.pt")
-    load_query_embedding_model(checkpoint_path, n_users, n_items, metadata_dim, device)
+    checkpoint_path = Path("checkpoints/two_tower_history/best_model.pt")
+    load_query_embedding_model(checkpoint_path, len(idx_to_movie_id), device)
 
     _model_cache["user_mapping"] = user_mapping
     _model_cache["idx_to_movie_id"] = idx_to_movie_id
@@ -257,7 +237,11 @@ async def recommend(request: RecommendRequest):
 
     # Index positions are movie_map indices (see scripts/build_index.py).
     # Drop movies the user already rated, then keep the reranker prompt budget.
-    seen = get_seen_movie_ids(splits_dir, request.user_id)
+    # Cached per user: the splits are static offline data, so no invalidation needed.
+    seen_cache = _model_cache.setdefault("seen_cache", {})
+    if request.user_id not in seen_cache:
+        seen_cache[request.user_id] = get_seen_movie_ids(splits_dir, request.user_id)
+    seen = seen_cache[request.user_id]
     candidate_movie_ids = [
         mid for idx in indices
         if (mid := idx_to_movie_id[int(idx)]) not in seen

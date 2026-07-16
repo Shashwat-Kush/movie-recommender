@@ -13,6 +13,9 @@ two_tower:
   metadata_dim: 128
   temperature: 0.05   # divides cosine scores into logit range for in-batch softmax
   min_rating: 3.5     # ratings below this are not treated as positives
+  history_k: 20       # two_tower_history: pool the user's K most recent liked movies
+  logq_correction: true  # debias in-batch negatives so raw cosine ranks by likelihood
+                         # (makes the serving-time popularity blend unnecessary)
 
 # Training hyperparameters
 # Exponents need the 1.0e-5 form: YAML 1.1 reads 1e-5 as a string, not a float.

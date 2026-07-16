@@ -7,9 +7,10 @@ random_seed: 42
 pool_size_bytes: 2147483648  # 2GB
 
 # Post-retrieval scoring: rank candidates by cosine + popularity_weight * log(pop_count + 1).
-# The in-batch softmax model learns popularity-corrected preferences, so raw cosine
-# under-recommends popular movies; 0.1 was tuned on LOO recall@10 (peak of 0.05-0.2 grid).
-popularity_weight: 0.1
+# The served model trains with logQ correction, which bakes popularity into the cosine
+# itself — any extra blend hurts (recall@10 drops monotonically with weight). Only set
+# this >0 for checkpoints trained WITHOUT logq_correction (0.1 was the tuned value).
+popularity_weight: 0.0
 # Retrieve this many candidates from HNSW before blending, then keep the top few
 # dozen for the LLM reranker. Must be much larger than the final K because the
 # popularity bonus can lift items from deep in the cosine ranking.

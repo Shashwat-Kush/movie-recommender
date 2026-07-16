@@ -21,7 +21,7 @@ from src.data.cold_start import build_aligned_metadata
 from src.data.dataset import create_dataloaders
 from src.models.trainer import MFTrainer, load_config, MFDataset
 from src.models.matrix_factorization import MatrixFactorization, ImplicitMF
-from src.models.two_tower import TwoTower, TwoTowerWithMetadata
+from src.models.two_tower import TwoTower, TwoTowerWithMetadata, TwoTowerHistory
 from torch.amp.autocast_mode import autocast
 from torch.amp.grad_scaler import GradScaler
 
@@ -97,10 +97,12 @@ def train_mf_implicit(args, data_config, model_config):
     print("Training Matrix Factorization (Implicit / BPR)")
     print("=" * 60)
 
+    # LOO protocol so recall on test_loo is comparable with the Two-Tower numbers.
     train_loader, val_time_loader, user_map, movie_map = create_dataloaders(
         data_config,
         batch_size=model_config.get("batch_size", 2048),
         shuffle_train=True,
+        protocol="loo",
     )
 
     n_users = len(user_map)
@@ -172,10 +174,14 @@ class TwoTowerTrainer:
         val_loader: Optional[Iterable],
         config: Dict[str, Any],
         device: Optional[torch.device] = None,
+        log_q: Optional[torch.Tensor] = None,
     ):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
+        # (n_items,) log sampling probability per item for logQ correction; see
+        # _in_batch_softmax_loss. None disables the correction.
+        self.log_q = log_q
 
         self.config = config or {}
         self.batch_size = self.config.get("batch_size", 2048)
@@ -246,16 +252,28 @@ class TwoTowerTrainer:
         item_ids: torch.Tensor,
         item_metadata: torch.Tensor,
     ) -> torch.Tensor:
-        """Sampled softmax with in-batch negatives (InfoNCE).
+        """Sampled softmax with in-batch negatives (InfoNCE) and optional logQ correction.
 
         Each row's item is the positive for its user; the other B-1 items in the batch
         are negatives. Because those items are other users' positives, they follow the
         popularity distribution — much harder negatives than uniform random sampling.
+
+        Without correction the model learns popularity-corrected scores (lift), which
+        under-recommends popular movies at serving. Subtracting log q_j (each item's
+        sampling probability) from its column debiases the softmax so raw cosine ranks
+        by likelihood directly — no serving-time popularity blend needed.
         """
-        user_emb = self.model.get_user_embeddings(user_ids)
+        if getattr(self.model, "history_based", False):
+            # Drop the current positive from its own user's history so the model
+            # can't answer by reading the label off its input.
+            user_emb = self.model.get_user_embeddings(user_ids, exclude_items=item_ids)
+        else:
+            user_emb = self.model.get_user_embeddings(user_ids)
         item_emb = self.model.get_item_embeddings(item_ids, item_metadata)
 
         logits = (user_emb @ item_emb.T) / self.temperature
+        if self.log_q is not None:
+            logits = logits - self.log_q[item_ids].unsqueeze(0)
         labels = torch.arange(logits.size(0), device=logits.device)
         return torch.nn.functional.cross_entropy(logits, labels)
 
@@ -446,6 +464,60 @@ class TwoTowerTrainer:
         self.es_best_loss = self.best_val_loss
 
 
+def build_log_q(
+    splits_dir: Path,
+    movie_map: Dict[int, int],
+    min_rating: float = 3.5,
+    device: Optional[torch.device] = None,
+) -> torch.Tensor:
+    """(n_items,) log sampling probability of each item among training positives.
+
+    In-batch negatives are drawn from the positive distribution, so q is just each
+    item's share of positives (add-one smoothed for never-positive items).
+    """
+    import pandas as pd
+
+    df = pd.read_parquet(splits_dir / "train_loo.parquet", columns=["movieId", "rating"])
+    df = df[df["rating"] >= min_rating]
+    idx = df["movieId"].map(movie_map).dropna().astype(int)
+
+    counts = np.zeros(len(movie_map), dtype=np.float64)
+    np.add.at(counts, idx.to_numpy(), 1)
+    q = (counts + 1) / (counts.sum() + len(counts))
+    return torch.from_numpy(np.log(q).astype(np.float32)).to(device)
+
+
+def build_user_history(
+    splits_dir: Path,
+    user_map: Dict[int, int],
+    movie_map: Dict[int, int],
+    k: int = 20,
+    min_rating: float = 3.5,
+) -> torch.Tensor:
+    """(n_users, k) matrix of each user's k most recent liked movie indices, -1 padded.
+
+    Built from train_loo only, so the held-out LOO items never leak into the
+    history the user tower pools over.
+    """
+    import pandas as pd
+
+    df = pd.read_parquet(splits_dir / "train_loo.parquet", columns=["userId", "movieId", "rating", "timestamp"])
+    df = df[df["rating"] >= min_rating]
+    df = df.sort_values("timestamp", ascending=False)
+    df["u"] = df["userId"].map(user_map)
+    df["i"] = df["movieId"].map(movie_map)
+    df = df.dropna(subset=["u", "i"])
+
+    history = torch.full((len(user_map), k), -1, dtype=torch.long)
+    for u, group in df.groupby("u", sort=False):
+        items = group["i"].head(k).to_numpy(dtype="int64")
+        history[int(u), : len(items)] = torch.from_numpy(items)
+
+    covered = int((history[:, 0] >= 0).sum())
+    print(f"User history: {covered:,}/{len(user_map):,} users have >=1 liked movie (K={k})")
+    return history
+
+
 def train_two_tower(args, data_config, model_config):
     """Train Two-Tower model with metadata support using cold-start embeddings."""
     print("=" * 60)
@@ -480,18 +552,38 @@ def train_two_tower(args, data_config, model_config):
     # Architecture params live under the `two_tower:` block in configs/model.yaml
     tt_config = model_config.get("two_tower", {})
 
-    # Initialize TwoTowerWithMetadata model
-    model = TwoTowerWithMetadata(
-        n_users=n_users,
-        n_items=n_items,
-        metadata_dim=metadata_dim,
-        embedding_dim=model_config.get("embedding_dim", 128),
-        hidden_dim=tt_config.get("hidden_dim", 256),
-        output_dim=tt_config.get("output_dim", 128),
-        dropout=tt_config.get("dropout", 0.1),
-    )
+    history_based = getattr(args, "model", "two_tower") == "two_tower_history"
+    if history_based:
+        history = build_user_history(
+            processed_dir, user_map, movie_map,
+            k=tt_config.get("history_k", 20),
+            min_rating=tt_config.get("min_rating", 3.5),
+        )
+        model = TwoTowerHistory(
+            n_items=n_items,
+            metadata_dim=metadata_dim,
+            history=history,
+            embedding_dim=model_config.get("embedding_dim", 128),
+            hidden_dim=tt_config.get("hidden_dim", 256),
+            output_dim=tt_config.get("output_dim", 128),
+            dropout=tt_config.get("dropout", 0.1),
+        )
+        default_ckpt_dir = "checkpoints/two_tower_history"
+    else:
+        model = TwoTowerWithMetadata(
+            n_users=n_users,
+            n_items=n_items,
+            metadata_dim=metadata_dim,
+            embedding_dim=model_config.get("embedding_dim", 128),
+            hidden_dim=tt_config.get("hidden_dim", 256),
+            output_dim=tt_config.get("output_dim", 128),
+            dropout=tt_config.get("dropout", 0.1),
+        )
+        default_ckpt_dir = "checkpoints/two_tower"
 
-    checkpoint_dir = model_config.get("checkpoint_dir", "checkpoints/two_tower")
+    checkpoint_dir = model_config.get("checkpoint_dir", default_ckpt_dir)
+    if history_based and checkpoint_dir == "checkpoints/two_tower":
+        checkpoint_dir = default_ckpt_dir  # don't clobber the ID-based model's checkpoints
     model_config["checkpoint_dir"] = checkpoint_dir
 
     # Wrap loaders with positive filtering and metadata lookup
@@ -516,6 +608,8 @@ def train_two_tower(args, data_config, model_config):
         "early_stopping": model_config.get("early_stopping", {}),
         "log_interval": model_config.get("log_interval", 500),
         # Model architecture params saved in checkpoint for evaluate.py / build_index.py
+        "model_type": "two_tower_history" if history_based else "two_tower",
+        "history_k": tt_config.get("history_k", 20) if history_based else None,
         "n_users": n_users,
         "n_items": n_items,
         "metadata_dim": metadata_dim,
@@ -525,7 +619,13 @@ def train_two_tower(args, data_config, model_config):
         "dropout": tt_config.get("dropout", 0.1),
     }
 
-    trainer = TwoTowerTrainer(model, train_dataset, val_dataset, train_config, device)
+    log_q = None
+    if tt_config.get("logq_correction", False):
+        log_q = build_log_q(processed_dir, movie_map, min_rating=min_rating, device=device)
+        train_config["logq_correction"] = True
+        print("logQ correction enabled")
+
+    trainer = TwoTowerTrainer(model, train_dataset, val_dataset, train_config, device, log_q=log_q)
 
     if getattr(args, "resume", False):
         epoch_ckpts = sorted(
@@ -550,9 +650,10 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        choices=["mf", "mf_implicit", "two_tower"],
+        choices=["mf", "mf_implicit", "two_tower", "two_tower_history"],
         required=True,
-        help="Model to train: mf (explicit), mf_implicit (BPR), or two_tower"
+        help="Model to train: mf (explicit), mf_implicit (BPR), two_tower (user-ID tower), "
+             "or two_tower_history (user tower pools watch-history embeddings)"
     )
     parser.add_argument(
         "--data-config",
@@ -584,7 +685,7 @@ def main():
         train_mf_explicit(args, data_config, model_config)
     elif args.model == "mf_implicit":
         train_mf_implicit(args, data_config, model_config)
-    elif args.model == "two_tower":
+    elif args.model in ("two_tower", "two_tower_history"):
         train_two_tower(args, data_config, model_config)
 
     gc.collect()

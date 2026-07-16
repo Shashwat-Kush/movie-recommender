@@ -178,3 +178,88 @@ class TwoTowerWithMetadata(nn.Module):
         item_features = torch.cat([zero_emb, item_metadata], dim=1)
         emb = self.item_tower(item_features)
         return F.normalize(emb, p=2, dim=1)
+
+
+class TwoTowerHistory(nn.Module):
+    """Two-Tower whose user representation is the user's watch history, not an ID.
+
+    The user vector is the mean of the item-embedding-table rows for the user's K
+    most recent liked movies, passed through the user MLP. No per-user parameters:
+    the model generalizes to any user with history and reacts to new watches without
+    retraining. The item tower is identical to TwoTowerWithMetadata.
+
+    The (n_users, K) history matrix (-1 padded) is a persistent buffer, so
+    checkpoints are self-contained for evaluation and serving.
+    """
+
+    history_based = True  # trainer/eval pass exclude_items / rely on this flag
+
+    def __init__(
+        self,
+        n_items: int,
+        metadata_dim: int,
+        history: torch.Tensor,
+        embedding_dim: int = 128,
+        hidden_dim: int = 256,
+        output_dim: int = 128,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+        self.n_items = n_items
+        self.metadata_dim = metadata_dim
+        self.embedding_dim = embedding_dim
+        self.output_dim = output_dim
+
+        self.item_embedding = nn.Embedding(n_items, embedding_dim)
+        nn.init.normal_(self.item_embedding.weight, std=0.01)
+
+        self.register_buffer("user_history", history.long())
+
+        self.user_tower = MLP(embedding_dim, hidden_dim, output_dim, dropout)
+        self.item_tower = MLP(embedding_dim + metadata_dim, hidden_dim, output_dim, dropout)
+
+    def _pool_history(
+        self,
+        user_ids: torch.Tensor,
+        exclude_items: torch.Tensor = None,
+    ) -> torch.Tensor:
+        """Mean of history item embeddings; -1 pads (and the excluded item) masked out.
+
+        exclude_items drops the current training positive from its own user's history
+        so the model can't answer by reading the label off its input.
+        """
+        hist = self.user_history[user_ids]  # (B, K)
+        mask = hist >= 0
+        if exclude_items is not None:
+            mask &= hist != exclude_items.unsqueeze(1)
+        emb = self.item_embedding(hist.clamp(min=0)) * mask.unsqueeze(-1)
+        return emb.sum(dim=1) / mask.sum(dim=1, keepdim=True).clamp(min=1)
+
+    def get_user_embeddings(
+        self,
+        user_ids: torch.Tensor,
+        exclude_items: torch.Tensor = None,
+    ) -> torch.Tensor:
+        """L2-normalized user embeddings pooled from watch history."""
+        pooled = self._pool_history(user_ids, exclude_items)
+        return F.normalize(self.user_tower(pooled), p=2, dim=1)
+
+    def get_item_embeddings(
+        self,
+        item_ids: torch.Tensor,
+        item_metadata: torch.Tensor,
+    ) -> torch.Tensor:
+        """L2-normalized item embeddings from IDs and metadata."""
+        item_features = torch.cat([self.item_embedding(item_ids), item_metadata], dim=1)
+        return F.normalize(self.item_tower(item_features), p=2, dim=1)
+
+    def forward(
+        self,
+        user_ids: torch.Tensor,
+        item_ids: torch.Tensor,
+        item_metadata: torch.Tensor,
+    ) -> torch.Tensor:
+        """Similarity scores (dot of L2-normalized embeddings)."""
+        user_out = self.get_user_embeddings(user_ids)
+        item_out = self.get_item_embeddings(item_ids, item_metadata)
+        return (user_out * item_out).sum(dim=1)
