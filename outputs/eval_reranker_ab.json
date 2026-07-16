@@ -1,0 +1,12 @@
+{
+  "users_evaluated": 200,
+  "reranker_fallbacks": 20,
+  "retrieval": {
+    "recall@10": 0.07,
+    "ndcg@10": 0.03877826137133876
+  },
+  "reranked": {
+    "recall@10": 0.075,
+    "ndcg@10": 0.042241568840744065
+  }
+}
