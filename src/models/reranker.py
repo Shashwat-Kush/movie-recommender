@@ -45,6 +45,9 @@ class GroqReranker:
         self.max_candidates_per_request = max_candidates_per_request
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.max_retries = max_retries
+        # Token usage of the most recent rerank() call ({"prompt_tokens",
+        # "completion_tokens", "cached"}); None until the first call.
+        self.last_usage = None
 
     def _build_prompt(self, query: str, movies: List[Dict[str, Any]], top_k: int) -> str:
         """Build the reranking prompt. Title + genres only: tags are the token
@@ -116,6 +119,7 @@ indices (0-based), best first. No prose, JSON only."""
 
         cache_path = self._cache_path(prompt)
         if cache_path is not None and cache_path.exists():
+            self.last_usage = {"prompt_tokens": 0, "completion_tokens": 0, "cached": True}
             return json.loads(cache_path.read_text())
 
         for attempt in range(self.max_retries + 1):
@@ -134,6 +138,12 @@ indices (0-based), best first. No prose, JSON only."""
                     response_format={"type": "json_object"},
                 )
                 response_text = response.choices[0].message.content or ""
+                if response.usage is not None:
+                    self.last_usage = {
+                        "prompt_tokens": response.usage.prompt_tokens,
+                        "completion_tokens": response.usage.completion_tokens,
+                        "cached": False,
+                    }
                 results = self._parse_response(response_text, len(movies))
                 if results and cache_path is not None:
                     cache_path.parent.mkdir(parents=True, exist_ok=True)

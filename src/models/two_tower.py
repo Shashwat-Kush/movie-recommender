@@ -261,6 +261,18 @@ class TwoTowerHistory(nn.Module):
         pooled = self._pool_history(user_ids, exclude_items)
         return F.normalize(self.user_tower(pooled), p=2, dim=1)
 
+    def get_user_embedding_from_items(self, item_ids: torch.Tensor) -> torch.Tensor:
+        """L2-normalized user embedding for an ad-hoc liked-movies list (cold-user
+        onboarding — no user ID or stored history needed). item_ids: (K,) item
+        indices ordered most-liked/most-recent first; same recency weighting as
+        stored histories. Returns (1, output_dim)."""
+        emb = self.item_embedding(item_ids)
+        weights = torch.ones(len(item_ids), device=item_ids.device)
+        if self.history_decay != 1.0:
+            weights = self.history_decay ** torch.arange(len(item_ids), device=item_ids.device, dtype=torch.float32)
+        pooled = (emb * weights.unsqueeze(1)).sum(dim=0, keepdim=True) / weights.sum().clamp(min=1e-8)
+        return F.normalize(self.user_tower(pooled), p=2, dim=1)
+
     def get_item_embeddings(
         self,
         item_ids: torch.Tensor,

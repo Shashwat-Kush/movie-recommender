@@ -129,6 +129,16 @@ python3 -m uvicorn app.main:app --port 8000
 curl -X POST http://localhost:8000/recommend \
   -H "Content-Type: application/json" \
   -d '{"user_id": 1, "query": "funny action movies", "top_k": 5}'
+
+# Cold-start: recommendations for a brand-new user from a few picked movies
+curl -X POST http://localhost:8000/recommend_cold \
+  -H "Content-Type: application/json" \
+  -d '{"liked_movie_ids": [2571, 4226, 48780], "query": "a smart thriller", "top_k": 5}'
+
+# 7. Frontend (frontend/): a static Next.js portfolio demo that replays real
+#    recorded responses — deployable to Vercel with zero backend.
+PYTHONPATH=. python3 scripts/capture_fixtures.py   # record fixtures from the live stack
+cd frontend && npm install && npm run build        # then `npm run dev` or deploy
 ```
 
 `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` matters on 8GB machines: training fits comfortably,

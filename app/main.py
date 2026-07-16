@@ -1,7 +1,8 @@
 """FastAPI server for movie recommendations."""
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+import time
+from typing import List, Dict, Any, Optional, Tuple
 
 import numpy as np
 import torch
@@ -30,15 +31,45 @@ class RecommendRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=20, description="Number of recommendations")
 
 
+class ColdRecommendRequest(BaseModel):
+    liked_movie_ids: List[int] = Field(..., min_length=1, max_length=20, description="Movies the user picked as liked, most-liked first")
+    query: str = Field(..., description="Natural language query")
+    top_k: int = Field(default=5, ge=1, le=20, description="Number of recommendations")
+
+
 class MovieRecommendation(BaseModel):
     movieId: int
     title: str
     genres: str
     rerank_score: float
+    retrieval_rank: Optional[int] = None  # 1-based position in the retrieval candidate list
+    distance: Optional[float] = None  # cosine distance to the user embedding (lower = closer)
+
+
+class Candidate(BaseModel):
+    movieId: int
+    title: str
+    genres: str
+    retrieval_rank: int
+    distance: float
+
+
+class Timing(BaseModel):
+    hnsw_ms: float
+    rerank_ms: float
+
+
+class Usage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    cached: bool
 
 
 class RecommendResponse(BaseModel):
     recommendations: List[MovieRecommendation]
+    candidates: List[Candidate]
+    timing: Timing
+    usage: Optional[Usage] = None
 
 
 _config_cache: Dict[str, Any] = {}
@@ -180,8 +211,9 @@ async def startup():
     user_mapping = load_user_mapping(splits_dir / "user_mapping.parquet")
     print(f"Loaded {len(user_mapping):,} users")
 
-    _, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
+    movie_id_to_idx, idx_to_movie_id = load_movie_mapping(splits_dir / "movie_mapping.parquet")
     print(f"Loaded {len(idx_to_movie_id):,} movies (training)")
+    _model_cache["movie_id_to_idx"] = movie_id_to_idx
 
     # Popularity blend (see configs/retrieval.yaml): rank candidates by
     # cosine + popularity_weight * log(pop_count + 1). Counts are written by
@@ -222,7 +254,6 @@ async def startup():
 @app.post("/recommend", response_model=RecommendResponse)
 async def recommend(request: RecommendRequest):
     user_mapping = _model_cache["user_mapping"]
-    idx_to_movie_id = _model_cache["idx_to_movie_id"]
     device = _model_cache["device"]
     splits_dir = _model_cache["splits_dir"]
     model = _model_cache["model"]
@@ -232,22 +263,6 @@ async def recommend(request: RecommendRequest):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    indices, distances = search_hnsw(
-        Path("cpp/build_arm64/index.bin"),
-        query_vec,
-        k=_model_cache["candidate_pool"],
-        ef_search=100,
-    )
-
-    # Blend popularity into retrieval scores (engine distance = -dot).
-    log_pop = _model_cache["log_pop"]
-    w = _model_cache["popularity_weight"]
-    if log_pop is not None and w > 0:
-        scores = -distances + w * log_pop[indices]
-        indices = indices[np.argsort(-scores)]
-
-    # Index positions are movie_map indices (see scripts/build_index.py).
-    # Drop movies the user already rated, then keep the reranker prompt budget.
     # Cached per user: the splits are static offline data, so no invalidation needed.
     seen_cache = _model_cache.setdefault("seen_cache", {})
     if request.user_id not in seen_cache:
@@ -258,30 +273,104 @@ async def recommend(request: RecommendRequest):
             seen_cache[request.user_id] = set(movie_ids[offsets[uidx] : offsets[uidx + 1]].tolist())
         else:
             seen_cache[request.user_id] = get_seen_movie_ids(splits_dir, request.user_id)
-    seen = seen_cache[request.user_id]
-    candidate_movie_ids = [
-        mid for idx in indices
-        if (mid := idx_to_movie_id[int(idx)]) not in seen
-    ][:25]  # reranker token budget: the tail of the list is not where reranking earns anything
 
-    movies_meta = load_movie_metadata(Path("data/parquet/movies"), candidate_movie_ids)
+    return _run_pipeline(query_vec, seen_cache[request.user_id], request.query, request.top_k)
 
-    reranker_config = load_reranker_config("configs/reranker.yaml")
-    reranker = create_reranker(reranker_config)
 
-    reranked = reranker.rerank(request.query, movies_meta, top_k=request.top_k)
+@app.post("/recommend_cold", response_model=RecommendResponse)
+async def recommend_cold(request: ColdRecommendRequest):
+    """Recommendations for a brand-new user from a handful of picked movies.
 
-    recommendations = [
-        MovieRecommendation(
-            movieId=movie["movieId"],
-            title=movie["title"],
-            genres=movie.get("genres", ""),
-            rerank_score=movie.get("rerank_score", 0.0),
-        )
-        for movie in reranked
-    ]
+    No user ID or stored history: the picked movies are pooled through the history
+    tower (same recency weighting as stored histories) to form the user embedding.
+    """
+    movie_id_to_idx = _model_cache["movie_id_to_idx"]
+    device = _model_cache["device"]
+    model = _model_cache["model"]
 
-    return RecommendResponse(recommendations=recommendations)
+    item_idxs = [movie_id_to_idx[mid] for mid in request.liked_movie_ids if mid in movie_id_to_idx]
+    if not item_idxs:
+        raise HTTPException(status_code=404, detail="None of the picked movieIds are in the catalog")
+
+    with torch.no_grad():
+        query_vec = model.get_user_embedding_from_items(
+            torch.tensor(item_idxs, dtype=torch.long, device=device)
+        ).cpu().numpy().astype(np.float32)[0]
+
+    # Never re-recommend what the user just told us they've watched.
+    return _run_pipeline(query_vec, set(request.liked_movie_ids), request.query, request.top_k)
+
+
+def _run_pipeline(query_vec: np.ndarray, seen: set, query: str, top_k: int) -> RecommendResponse:
+    """Shared retrieve -> blend -> filter -> rerank pipeline for both endpoints."""
+    idx_to_movie_id = _model_cache["idx_to_movie_id"]
+
+    t0 = time.perf_counter()
+    indices, distances = search_hnsw(
+        Path("cpp/build_arm64/index.bin"),
+        query_vec,
+        k=_model_cache["candidate_pool"],
+        ef_search=100,
+    )
+    hnsw_ms = (time.perf_counter() - t0) * 1000
+
+    # Engine distance = -dot of L2-normalized vectors; report proper cosine
+    # distance (1 - cosine, lower = closer).
+    cos_dist_by_idx = {int(i): float(1.0 + d) for i, d in zip(indices, distances)}
+
+    # Blend popularity into retrieval scores (engine distance = -dot).
+    log_pop = _model_cache["log_pop"]
+    w = _model_cache["popularity_weight"]
+    if log_pop is not None and w > 0:
+        scores = -distances + w * log_pop[indices]
+        indices = indices[np.argsort(-scores)]
+
+    # Index positions are movie_map indices (see scripts/build_index.py).
+    # Drop seen movies, then keep the reranker prompt budget: the tail of the
+    # list is not where reranking earns anything.
+    candidate_ids, candidate_dists = [], []
+    for idx in indices:
+        mid = idx_to_movie_id[int(idx)]
+        if mid not in seen:
+            candidate_ids.append(mid)
+            candidate_dists.append(cos_dist_by_idx[int(idx)])
+        if len(candidate_ids) == 25:
+            break
+
+    movies_meta = load_movie_metadata(Path("data/parquet/movies"), candidate_ids)
+    rank_by_id = {mid: r + 1 for r, mid in enumerate(candidate_ids)}
+    dist_by_id = dict(zip(candidate_ids, candidate_dists))
+
+    reranker = create_reranker(load_reranker_config("configs/reranker.yaml"))
+    t1 = time.perf_counter()
+    reranked = reranker.rerank(query, movies_meta, top_k=top_k)
+    rerank_ms = (time.perf_counter() - t1) * 1000
+
+    return RecommendResponse(
+        recommendations=[
+            MovieRecommendation(
+                movieId=m["movieId"],
+                title=m["title"],
+                genres=m.get("genres", ""),
+                rerank_score=m.get("rerank_score", 0.0),
+                retrieval_rank=rank_by_id.get(m["movieId"]),
+                distance=dist_by_id.get(m["movieId"]),
+            )
+            for m in reranked
+        ],
+        candidates=[
+            Candidate(
+                movieId=meta["movieId"],
+                title=meta["title"],
+                genres=meta.get("genres", ""),
+                retrieval_rank=rank_by_id[meta["movieId"]],
+                distance=dist_by_id[meta["movieId"]],
+            )
+            for meta in movies_meta
+        ],
+        timing=Timing(hnsw_ms=round(hnsw_ms, 1), rerank_ms=round(rerank_ms, 1)),
+        usage=Usage(**reranker.last_usage) if reranker.last_usage else None,
+    )
 
 
 @app.get("/health")
