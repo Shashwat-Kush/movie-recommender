@@ -1,0 +1,11 @@
+{
+  "protocol": "leave_one_out",
+  "checkpoint": "checkpoints/two_tower/epoch_4.pt",
+  "metrics": {
+    "recall@10": 0.028210812098806437,
+    "ndcg@10": 0.013207950563637095,
+    "popularity_recall@10": 0.04857285205750471,
+    "popularity_ndcg@10": 0.024835253775419456,
+    "num_users_evaluated": 138493
+  }
+}

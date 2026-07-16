@@ -105,66 +105,109 @@ def compute_item_embeddings(
     return all_embeddings
 
 
+def load_seen_items(
+    splits_dir: Path,
+    user_mapping: dict,
+    item_mapping: dict,
+) -> tuple[dict, np.ndarray]:
+    """Load each user's known interactions (everything except the held-out LOO item).
+
+    Returns (user_idx -> np.ndarray of seen item_idx, popularity counts per item_idx).
+    Seen items must be masked before top-K: recommending a movie the user already
+    watched can never hit the held-out item, so leaving them in only deflates recall.
+    """
+    frames = [
+        pd.read_parquet(splits_dir / f, columns=["userId", "movieId"])
+        for f in ("train_loo.parquet", "val_loo.parquet")
+    ]
+    df = pd.concat(frames, ignore_index=True)
+
+    u = df["userId"].map(user_mapping)
+    i = df["movieId"].map(item_mapping)
+    valid = u.notna() & i.notna()
+    seen = pd.DataFrame({"u": u[valid].astype(np.int64), "i": i[valid].astype(np.int64)})
+
+    pop_counts = np.zeros(len(item_mapping), dtype=np.float64)
+    np.add.at(pop_counts, seen["i"].to_numpy(), 1)
+
+    seen_dict = {int(uidx): grp.to_numpy() for uidx, grp in seen.groupby("u")["i"]}
+    return seen_dict, pop_counts
+
+
 def compute_metrics(
     user_embeddings: np.ndarray,
     item_embeddings: np.ndarray,
     test_df: pd.DataFrame,
+    seen_dict: dict,
+    pop_counts: np.ndarray,
     user_mapping: dict,
     item_mapping: dict,
     k: int = 10,
+    chunk_size: int = 512,
+    popularity_weight: float = 0.0,
 ) -> dict:
-    """Compute Recall@K and NDCG@K."""
+    """Compute Recall@K (hit rate) and NDCG@K on the leave-one-out split.
 
-    test_users = test_df["userId"].unique()
-    valid_users = [u for u in test_users if u in user_mapping]
+    One held-out item per user, so NDCG@K reduces to 1/log2(rank+2) on a hit and
+    recall to hit-or-miss. Also reports a popularity baseline (rank by train rating
+    count, same seen-item masking) as a sanity floor for the model numbers.
 
-    print(f"Evaluating {len(valid_users)} users out of {len(test_users)} in test set")
+    popularity_weight w ranks by `cosine + w*log(pop_count+1)` — the serving formula.
+    The in-batch softmax loss learns popularity-corrected preferences, so raw cosine
+    under-recommends popular movies; w adds that signal back. w=0 is pure cosine.
+    """
+    df = test_df[test_df["userId"].isin(user_mapping) & test_df["movieId"].isin(item_mapping)]
+    print(f"Evaluating {len(df)} users out of {test_df['userId'].nunique()} in test set")
 
-    all_recall = []
-    all_ndcg = []
+    users = df["userId"].map(user_mapping).to_numpy(np.int64)
+    targets = df["movieId"].map(item_mapping).to_numpy(np.int64)
 
-    user_emb_lookup = {u: user_embeddings[user_mapping[u]] for u in valid_users}
-    # Map movieId -> item_idx for fast lookup
-    item_idx_lookup = {movie_id: item_mapping[movie_id] for movie_id in item_mapping}
+    pop_sorted = np.sort(pop_counts)
+    n_items = len(pop_counts)
+    pop_bonus = popularity_weight * np.log(pop_counts + 1.0).astype(np.float32)
 
-    for user_id in valid_users:
-        user_emb = user_emb_lookup[user_id]
+    model_hits = model_ndcg = pop_hits = pop_ndcg = 0.0
 
-        user_test = test_df[test_df["userId"] == user_id]
-        true_items = user_test["movieId"].values
-        true_ratings = user_test["rating"].values
+    for start in range(0, len(users), chunk_size):
+        u_chunk = users[start : start + chunk_size]
+        t_chunk = targets[start : start + chunk_size]
+        scores = user_embeddings[u_chunk] @ item_embeddings.T + pop_bonus
 
-        valid_item_indices = [item_idx_lookup[i] for i in true_items if i in item_idx_lookup]
-        if not valid_item_indices:
-            continue
+        for row in range(len(u_chunk)):
+            uidx, target = int(u_chunk[row]), int(t_chunk[row])
+            seen = seen_dict.get(uidx)
 
-        scores = item_embeddings @ user_emb
-        rated_item_indices = np.array(valid_item_indices)
-        rated_scores = scores[rated_item_indices]
+            s = scores[row]
+            target_score = s[target]
+            if seen is not None:
+                s[seen] = -np.inf
+            rank = int((s > target_score).sum())
+            if rank < k:
+                model_hits += 1
+                model_ndcg += 1.0 / np.log2(rank + 2)
 
-        top_k_indices = np.argpartition(-scores, k)[:k]
-        top_k_indices = top_k_indices[np.argsort(-scores[top_k_indices])]
-        top_k_set = set(top_k_indices)
+            # Popularity rank: count unseen items above the target; split ties evenly.
+            pt = pop_counts[target]
+            higher = n_items - int(np.searchsorted(pop_sorted, pt, side="right"))
+            ties = int(np.searchsorted(pop_sorted, pt, side="right")) - int(
+                np.searchsorted(pop_sorted, pt, side="left")
+            ) - 1
+            if seen is not None:
+                seen_pop = pop_counts[seen]
+                higher -= int((seen_pop > pt).sum())
+                ties -= int((seen_pop == pt).sum())
+            pop_rank = higher + ties // 2
+            if pop_rank < k:
+                pop_hits += 1
+                pop_ndcg += 1.0 / np.log2(pop_rank + 2)
 
-        hits = sum(1 for idx in rated_item_indices if idx in top_k_set)
-        recall = hits / len(rated_item_indices)
-        all_recall.append(recall)
-
-        dcg = 0.0
-        for rank, idx in enumerate(top_k_indices):
-            if idx in rated_item_indices:
-                rel = true_ratings[np.where(rated_item_indices == idx)[0][0]]
-                dcg += (2 ** rel - 1) / np.log2(rank + 2)
-
-        ideal_ratings = np.sort(true_ratings)[::-1][:k]
-        idcg = sum((2 ** r - 1) / np.log2(i + 2) for i, r in enumerate(ideal_ratings))
-        ndcg = dcg / idcg if idcg > 0 else 0.0
-        all_ndcg.append(ndcg)
-
+    n = len(users)
     return {
-        f"recall@{k}": float(np.mean(all_recall)),
-        f"ndcg@{k}": float(np.mean(all_ndcg)),
-        "num_users_evaluated": len(all_recall),
+        f"recall@{k}": model_hits / n,
+        f"ndcg@{k}": model_ndcg / n,
+        f"popularity_recall@{k}": pop_hits / n,
+        f"popularity_ndcg@{k}": pop_ndcg / n,
+        "num_users_evaluated": n,
     }
 
 
@@ -180,7 +223,19 @@ def main():
     )
     parser.add_argument("--output", type=str, default="outputs/eval_loo.json", help="Metrics output path")
     parser.add_argument("-k", type=int, default=10, help="Cutoff K for recall/NDCG")
+    parser.add_argument(
+        "--popularity-weight",
+        type=float,
+        default=None,
+        help="Rank by cosine + w*log(pop+1); default comes from configs/retrieval.yaml",
+    )
     args = parser.parse_args()
+
+    popularity_weight = args.popularity_weight
+    if popularity_weight is None:
+        retrieval_cfg = load_config("configs/retrieval.yaml") if Path("configs/retrieval.yaml").exists() else {}
+        popularity_weight = float(retrieval_cfg.get("popularity_weight", 0.0))
+    print(f"Popularity weight: {popularity_weight}")
 
     data_config = load_config("configs/data.yaml")
     splits_dir = Path(data_config["splits"]["output_dir"])
@@ -213,15 +268,26 @@ def main():
     test_df = pd.read_parquet(splits_dir / "test_loo.parquet")
     print(f"  Test interactions: {len(test_df)}")
 
+    print("Loading seen items (for masking) and popularity counts...")
+    seen_dict, pop_counts = load_seen_items(splits_dir, user_mapping, item_mapping)
+
+    # Serving artifact: infer.py / app load these counts to apply the same
+    # popularity blend at retrieval time (movie_map index order).
+    np.save(splits_dir / "popularity_counts.npy", pop_counts)
+
     print("Computing metrics...")
     metrics = compute_metrics(
         user_embeddings,
         item_embeddings,
         test_df,
+        seen_dict,
+        pop_counts,
         user_mapping,
         item_mapping,
         k=args.k,
+        popularity_weight=popularity_weight,
     )
+    metrics["popularity_weight"] = popularity_weight
 
     print("\n=== Evaluation Results ===")
     for key, v in metrics.items():
