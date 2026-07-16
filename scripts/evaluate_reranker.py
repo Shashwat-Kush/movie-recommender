@@ -42,8 +42,8 @@ def ndcg_single(rank: int) -> float:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint", type=str, default="checkpoints/two_tower/best_model.pt")
-    parser.add_argument("--users", type=int, default=200, help="Users to sample")
+    parser.add_argument("--checkpoint", type=str, default="checkpoints/two_tower_history/best_model.pt")
+    parser.add_argument("--users", type=int, default=500, help="Users to sample")
     parser.add_argument("--output", type=str, default="outputs/eval_reranker_ab.json")
     parser.add_argument("--cpu", action="store_true", help="Force CPU (leave MPS free for training)")
     parser.add_argument("--seed", type=int, default=0)
@@ -92,6 +92,8 @@ def main():
 
     ret_hits = ret_ndcg = rr_hits = rr_ndcg = 0.0
     evaluated = fallbacks = 0
+    # McNemar discordant pairs: b = retrieval hit & reranked missed, c = the reverse
+    mcnemar_b = mcnemar_c = 0
 
     for _, row in sample.iterrows():
         user_id, target_movie = int(row["userId"]), int(row["movieId"])
@@ -131,15 +133,32 @@ def main():
         rr_hits += rr_rank < K
         rr_ndcg += ndcg_single(rr_rank)
 
+        if (ret_rank < K) and not (rr_rank < K):
+            mcnemar_b += 1
+        elif not (ret_rank < K) and (rr_rank < K):
+            mcnemar_c += 1
+
         evaluated += 1
         if evaluated % 20 == 0:
             print(f"  [{evaluated}/{args.users}] retrieval recall {ret_hits/evaluated:.3f} | reranked {rr_hits/evaluated:.3f}")
+
+    # Exact McNemar: under H0 (no difference) the discordant pairs split 50/50.
+    from scipy.stats import binomtest
+
+    n_discordant = mcnemar_b + mcnemar_c
+    p_value = binomtest(mcnemar_c, n_discordant, 0.5).pvalue if n_discordant else 1.0
 
     results = {
         "users_evaluated": evaluated,
         "reranker_fallbacks": fallbacks,
         "retrieval": {f"recall@{K}": ret_hits / evaluated, f"ndcg@{K}": ret_ndcg / evaluated},
         "reranked": {f"recall@{K}": rr_hits / evaluated, f"ndcg@{K}": rr_ndcg / evaluated},
+        "mcnemar": {
+            "retrieval_only_hits": mcnemar_b,
+            "reranked_only_hits": mcnemar_c,
+            "p_value": p_value,
+            "significant_at_0.05": bool(p_value < 0.05),
+        },
     }
     print("\n=== Reranker A/B Results ===")
     print(json.dumps(results, indent=2))

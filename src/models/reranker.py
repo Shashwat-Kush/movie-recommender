@@ -46,7 +46,7 @@ class GroqReranker:
         self.cache_dir = Path(cache_dir) if cache_dir else None
         self.max_retries = max_retries
 
-    def _build_prompt(self, query: str, movies: List[Dict[str, Any]]) -> str:
+    def _build_prompt(self, query: str, movies: List[Dict[str, Any]], top_k: int) -> str:
         """Build the reranking prompt. Title + genres only: tags are the token
         hog and the noisiest signal; the LLM reorders fine without them."""
         movie_lines = []
@@ -56,6 +56,7 @@ class GroqReranker:
             movie_lines.append(f"{i}: {title} | {genres}")
 
         movie_block = "\n".join(movie_lines)
+        n = min(top_k, len(movies))
 
         prompt = f"""You are a movie recommendation expert. Rank these candidates by relevance to the user's query.
 
@@ -64,8 +65,8 @@ User Query: "{query}"
 Candidates:
 {movie_block}
 
-Return a JSON object {{"ranking": [4, 0, 7]}} — candidate indices (0-based), best first,
-only movies you would recommend. No prose, JSON only."""
+Return a JSON object {{"ranking": [4, 0, 7]}} with exactly the {n} best candidate
+indices (0-based), best first. No prose, JSON only."""
 
         return prompt
 
@@ -108,9 +109,10 @@ only movies you would recommend. No prose, JSON only."""
         self,
         query: str,
         movies: List[Dict[str, Any]],
+        top_k: int,
     ) -> List[Dict[str, Any]]:
         """Rerank a single batch of movies (disk-cached, 429s retried with backoff)."""
-        prompt = self._build_prompt(query, movies)
+        prompt = self._build_prompt(query, movies, top_k)
 
         cache_path = self._cache_path(prompt)
         if cache_path is not None and cache_path.exists():
@@ -170,29 +172,34 @@ only movies you would recommend. No prose, JSON only."""
             return []
 
         all_results = []
+        ranked_ids = set()
 
         for i in range(0, len(movies), self.max_candidates_per_request):
             batch = movies[i : i + self.max_candidates_per_request]
-            batch_results = self._rerank_batch(query, batch)
+            batch_results = self._rerank_batch(query, batch, top_k)
 
             for result in batch_results:
                 idx = result["index"]
                 movie = batch[idx].copy()
                 movie["rerank_score"] = result["score"]
                 all_results.append(movie)
+                ranked_ids.add(id(batch[idx]))
 
         all_results.sort(key=lambda x: x.get("rerank_score", 0), reverse=True)
 
         if not all_results:
-            # Groq failed or was unparseable for every batch — fall back to
-            # upstream (HNSW) order rather than returning nothing.
             print("Warning: reranker produced no results, falling back to retrieval order")
-            fallback = []
-            for movie in movies[:top_k]:
-                movie = movie.copy()
-                movie["rerank_score"] = 0.0
-                fallback.append(movie)
-            return fallback
+
+        # Pad short (or empty) LLM output with the remaining candidates in upstream
+        # (retrieval) order — the caller always gets a full top_k list.
+        if len(all_results) < top_k:
+            for movie in movies:
+                if len(all_results) >= top_k:
+                    break
+                if id(movie) not in ranked_ids:
+                    movie = movie.copy()
+                    movie["rerank_score"] = 0.0
+                    all_results.append(movie)
 
         return all_results[:top_k]
 
